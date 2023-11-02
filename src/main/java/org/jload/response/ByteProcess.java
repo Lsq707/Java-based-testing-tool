@@ -1,11 +1,11 @@
-package org.example.response;
+package org.jload.response;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
 /*
 Get the BytesReceived
- */
+*/
 public class ByteProcess extends OutputStream {
     private long byteCount = 0;
 
