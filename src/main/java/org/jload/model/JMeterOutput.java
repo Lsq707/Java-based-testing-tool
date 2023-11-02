@@ -1,4 +1,4 @@
-package org.example.model;
+package org.jload.model;
 
 /*
 The output in csv

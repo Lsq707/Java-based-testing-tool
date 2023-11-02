@@ -1,4 +1,4 @@
-package org.example.response;
+package org.jload.response;
 
 import java.io.IOException;
 import java.io.OutputStream;
