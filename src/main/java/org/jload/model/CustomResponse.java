@@ -1,4 +1,4 @@
-package org.example.model;
+package org.jload.model;
 
 /*
 Customized Response
@@ -23,7 +23,7 @@ public class CustomResponse {
     private final long connect;
     private final String statusInfo;
 
-    public CustomResponse(String timeStamp, long elapsed, String label, String responseCode,String statusInfo, String responseMessage, String dataType, boolean success, String failureMessage, long bytesSent, long bytesReceived, String host, long connect) {
+    public CustomResponse(String timeStamp, long elapsed, String label, String responseCode,String statusInfo, String responseMessage, String dataType, boolean success, String failureMessage, long bytesSent, long bytesReceived, String host) {
         this.timeStamp = timeStamp;
         this.elapsed = elapsed;
         this.label = label;
@@ -38,7 +38,7 @@ public class CustomResponse {
         this.host = host;
         this.latency = 0;
         this.idleTime = 0;
-        this.connect = connect;
+        this.connect = 0;
     }
 
     public CustomResponse(String timeStamp, long elapsed, String label, String responseCode, String statusInfo, String responseMessage, String requestID, String dataType, boolean success, String failureMessage, long bytesSent, long bytesReceived, int grpThreads, int allThreads, String host, long latency, long idleTime, long connect) {
