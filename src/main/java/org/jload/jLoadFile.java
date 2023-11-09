@@ -1,11 +1,10 @@
-# Java-based-testing-tool
+package org.jload;
 
-## Requirements
-To compile and run the code, you must have Java 21.
+import jakarta.ws.rs.client.Entity;
+import org.jload.tasks.Task;
+import org.jload.user.User;
+import org.jload.user.UserParam;
 
-## How to start
-* Create your user class with related parameters in jLoadFile like below (user needs to be static)
-``` 
 @UserParam(
         host = "http://0.0.0.0:9000",
         waitTime = "between(0,5)"
@@ -14,12 +13,12 @@ class MyUser extends User {
     @Task
     void getMethod(){
        // System.out.println("get");
-        getClient().Path("/First").get();
+        getClient().path("/First").get();
     }
     @Task
     void postMethod(){
         String payload = "{\"key1\":\"value1\", \"key2\":\"value2\"}";
-        getClient().Path("/First").post(Entity.json(payload));;
+        getClient().path("/First").post(Entity.json(payload));
     }
 }
 
@@ -30,8 +29,6 @@ class MyUser extends User {
 class MyUser2 extends User {
     @Task
     void getMethod(){
-        getClient().Path("/Second").get();
+        getClient().path("/Second").get();
     }
 }
-```
-* Run the main method(you can set the testing info here eg. loop time/ testing time...)
