@@ -1,8 +1,12 @@
 package org.jload.runner;
 
+import org.jload.model.ShapeTuple;
+import org.jload.output.CsvOutputFilter;
+import org.jload.response.Statistics;
 import org.jload.tasks.Task;
 import org.jload.user.User;
 import org.jload.output.CsvOutput;
+import org.jload.user.WaitTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,185 +14,254 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /*
-Assign the Virtualthreads and run the application
- */
+The strategy to run the testing
+*/
 public class Runner {
     private static final Logger logger = LoggerFactory.getLogger(Runner.class);
     private static int loop;
-    private static int userNum;
     private static int timeOut;
     private static int testingTime;
-    private static int usrPerSecond;
-    private static List<User> users = new ArrayList<>();
-    private int userIter;
+    private static int spawnRate;
+    private static int userNum;
+    private static List<Class<?>> definedUsers;
+    private ConcurrentHashMap<String, List<User>> activeUsers;
+    private ScheduledExecutorService scheduledExecutorService;
+    private ScheduledFuture<?> runnableFuture;
+    private static Boolean taskFlag = true;
+    private static volatile Boolean testFlag = true;
+
+    private enum RunnerStatus {
+        READAY,
+        SPWANING,
+        RUNNING,
+        WAITING,
+        STOPPING,
+        STOPPED,
+        CLEANUP
+    }
 
     //Constructor START
-    public Runner(){
-        initUsers();
-        loop = 1;
-        usrPerSecond = 0;
-        userNum = users.size();
-        testingTime = Integer.MAX_VALUE;
+    public Runner(int loopTime, String fileName, int userNum, int spawnRate, int testingTime) throws IOException {
+        definedUsers = Env.getUserClass();
+        loop = loopTime;
+        CsvOutput.createFile(fileName);
+        Runner.testingTime = testingTime*1000;
+        Runner.spawnRate = spawnRate;
+        Runner.userNum = userNum;
         timeOut = Integer.MAX_VALUE;
+        activeUsers = new ConcurrentHashMap<>();
+    }
+
+    public Runner() throws IOException {
+        this(1,null);
     }
 
     public Runner(String fileName) throws IOException {
-        initUsers();
-        loop = 1;
-        CsvOutput.createFile(fileName);
-        usrPerSecond = 0;
-        userNum = users.size();
-        testingTime = Integer.MAX_VALUE;
-        timeOut = Integer.MAX_VALUE;
+        this(1,fileName);
     }
 
-    public Runner(int loopTime){
-        initUsers();
-        loop = 1;
-        usrPerSecond = 0;
-        userNum = users.size();
-        testingTime = Integer.MAX_VALUE;
-        timeOut = Integer.MAX_VALUE;
+    public Runner(int loopTime) throws IOException {
+        this(loopTime,null);
     }
 
     public Runner(int loopTime,String fileName) throws IOException {
-        initUsers();
-        loop = loopTime;
-        CsvOutput.createFile(fileName);
-        usrPerSecond = 0;
-        userNum = users.size();
-        testingTime = Integer.MAX_VALUE;
-        timeOut = Integer.MAX_VALUE;
+        this(loopTime,fileName,0,0,Integer.MAX_VALUE);
+        validateLoopTime(loopTime);
     }
 
-    public Runner(String fileName, int userPerSecond, int testingTime) throws IOException {
-        initUsers();
-        loop = 0;
-        CsvOutput.createFile(fileName);
-        Runner.testingTime = testingTime;
-        userNum = users.size();
-        usrPerSecond = userPerSecond;
-        timeOut = Integer.MAX_VALUE;
+    public Runner(String fileName, int userNum, int spawnRate, int testingTime) throws IOException {
+        this(0,fileName,userNum,spawnRate,testingTime);
     }
     //Constructors END
 
-    public static int getUserNum(){
-        return userNum;
+    /*
+    Initial the users declared in jLoadFile
+     */
+    private User initUser(Class<?> User){
+        User userInstance = null;
+        try {
+            Constructor<?> constructor = User.getDeclaredConstructor();
+            constructor.setAccessible(true);
+            userInstance = (User) constructor.newInstance();
+            logger.info("Instance of {} created: {}", User.getName(), userInstance);
+        } catch (Exception e) {
+            logger.error("Error creating an instance of class {}: {}", User.getName(), e.getMessage(), e);
+        }
+        return userInstance;
     }
 
-    //Initial the created users
-    private void initUsers(){
-        List<Class<?>> Users = ClassScanner.getClasses();
-            for (Class<?> cls : Users) {
-                try {
-                    if (User.class.isAssignableFrom(cls) && !cls.isInterface() && !Modifier.isAbstract(cls.getModifiers())) {
-                        Constructor<?> constructor = cls.getDeclaredConstructor();
-                        constructor.setAccessible(true);
-                        User userInstance = (User) constructor.newInstance();
-                        users.add(userInstance);
-                        logger.info("Instance of {} created: {}", cls.getName(), userInstance);
-                    }
-                } catch (Exception e) {
-                    logger.error("Error creating an instance of class {}: {}", cls.getName(), e.getMessage(), e);
-                }
-            }
-    }
-
-    //Set users to run
+    /*
+    Two ways running the testing
+    * loop times
+    * Shape (add or dispose users at different time)
+     */
     public void run() throws InterruptedException {
-        Runnable runExecution = loop == 0 ? this::executeInTimeControll : this::executeInLoop;
+        Runnable runExecution = loop == 0 ? this::executeInShapeControl : this::executeInLoop;
+        Statistics.registerFilter(new CsvOutputFilter());
         runExecution.run();
-    }
-
-    private void executeInTimeControll(){
-        ExecutorService poolExecutor = Executors.newVirtualThreadPerTaskExecutor();
-        ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
-        //Control the user numbers per seconds
-        AtomicInteger threadCount = new AtomicInteger(0);
-        ScheduledFuture<?> runnableFuture = scheduledExecutorService.scheduleAtFixedRate(() -> {
-            while (threadCount.get() < usrPerSecond) {
-                poolExecutor.submit((Runnable) users.get(userIter % users.size()));
-                userIter++;
-                threadCount.incrementAndGet();
-            }
-            threadCount.set(0);
-        }, 0, 1, TimeUnit.SECONDS);
-
-        // Run for the desired time
-        ExecuteTime();
-
-        // Stop the scheduled task
-        runnableFuture.cancel(true);
-
-        // Shutdown and await termination of the executor services
-        ShutdownThreads(poolExecutor);
-        ShutdownUserExecutor();
-        ShutdownThreads(scheduledExecutorService);
-
         // Close resources
-        CloseFile();
+        closeFile();
     }
 
+    /*
+    Get the customized shape or default shape,
+    check the condition each seconds to add or dispose users
+     */
+    private void executeInShapeControl(){
+        long startTime = System.currentTimeMillis();
+        LoadTestShape loadTestShape = Env.initShape();
+        scheduledExecutorService = Executors.newScheduledThreadPool(1);
+        runnableFuture = scheduledExecutorService.scheduleAtFixedRate(() -> {
+            List<ShapeTuple> shapeTuples = loadTestShape.tick();
+            if(shapeTuples == null) {
+                testFlag = false; //End the testing
+            }
+            else adjustUser(shapeTuples);
+        }, 0, 1, TimeUnit.SECONDS);
+        // Run for the scheduled time or schedule strategy
+        while (true){
+            long duration = System.currentTimeMillis() - startTime;
+            if(!testFlag || duration >= testingTime)
+                break;
+        }
+        // Stop the test
+        endTesting();
+    }
+
+    /*
+    Adjust running user numbers
+    */
+    private synchronized void adjustUser(List<ShapeTuple> tick) {
+        for (ShapeTuple shapeTuple : tick) {
+            long currNum = countActiveUser(shapeTuple.getUserCls());
+            long desiredNum = shapeTuple.getClsTotalNum();
+            long spawnRate = shapeTuple.getSpawnRate();
+            long difference = desiredNum - currNum;
+
+            if (difference > 0) {
+                for (int i = 0; i < difference && i < spawnRate; i++)
+                    addUser(shapeTuple.getUserCls());
+            } else if (difference < 0) {
+                for (int i = 0; i < -difference && i < spawnRate; i++)
+                    disposeUser(shapeTuple.getUserCls());
+            }
+        }
+    }
+
+    /*
+    Shut the user of certain class
+     */
+    private void disposeUser(String clsName){
+        List<User> users = activeUsers.get(clsName);
+        if(!users.isEmpty()) {
+            shutdownThreads(users.get(0).getClient().getClientExecutor());
+            users.remove(0);
+        }
+    }
+
+    /*
+    Add the user of certain class
+     */
+    private void addUser(String clsName){
+        User user = null;
+        for (Class<?> cls : definedUsers) {
+            if(getClsName(cls).equals(clsName)) {
+                user = initUser(cls);
+                Thread.ofVirtual().start(user);
+            }
+        }
+        if(user != null) {
+            List<User> usersList;
+            if (activeUsers.containsKey(clsName)) {
+                usersList = activeUsers.get(clsName);
+            } else {
+                usersList = new ArrayList<User>();
+                activeUsers.put(clsName, usersList);
+            }
+            assert usersList != null;
+            usersList.add(user);
+        }
+        if(user == null)
+            logger.error("No such user class: {}", clsName);
+    }
+
+    /*
+    Get the class name without pkg name
+     */
+    private String getClsName(Class<?> cls){
+        String name = null;
+        int lastDot = cls.getName().lastIndexOf(".");
+        name = cls.getName().substring(lastDot+1);
+        return name;
+    }
+
+    /*
+    Count the active user number of certain type
+     */
+    private long countActiveUser(String clsName){
+        if(activeUsers.get(clsName) != null)
+            return activeUsers.get(clsName).size();
+        return 0;
+    }
+
+    /*
+    Execute the testing with loop times
+    Each user and their tasks will execute once only then end the testing
+    */
     private void executeInLoop(){
         ExecutorService poolExecutor = Executors.newVirtualThreadPerTaskExecutor();
-        for(userIter = 0 ; userIter < loop; userIter++){
-            for(User user : users) {
-                poolExecutor.submit(user);
+        //For user to store the variables that able to be used by other method
+        int userItr;
+        for(userItr = 0 ; userItr < loop; userItr++){
+            for(Class<?> user: definedUsers){
+                poolExecutor.submit(initUser(user));
             }
         }
-        ShutdownThreads(poolExecutor);
-        ShutdownUserExecutor();
-        CloseFile();
+        shutdownThreads(poolExecutor);
+        shutdownAllUsers();
     }
 
-    //Set tasks to run
+    /*
+    Run the tasks in certain user
+    There are two ways running tasks
+    * In loop times: the tasks in certain user will only execute once
+    * In shape control: The task in each user will execute constantly until the taskFlag which defined in endTesting()
+     */
     public static <T extends User> void runUsers(T user) throws InterruptedException, InvocationTargetException, IllegalAccessException {
         ExecutorService taskExecutor = user.getClient().getClientExecutor();
-        long waitTime = user.getwaitTimeStrategy().getWaitTime();
+        WaitTime waitTime = user.getWaitTimeStrategy();
         Method[] userTasks = user.getClass().getDeclaredMethods();
-        for(Method task : userTasks) {
-            if (!task.isAccessible()) {
-                task.setAccessible(true);
+        while (taskFlag) {
+            for (Method task : userTasks) {
+                if (!task.isAccessible()) {
+                    task.setAccessible(true);
+                }
+                if (task.isAnnotationPresent(Task.class)) {
+                    taskExecutor.submit(() -> task.invoke(user));
+                    Thread.sleep(waitTime.getWaitTime());
+                }
             }
-            if(task.isAnnotationPresent(Task.class)){
-                taskExecutor.submit(() -> task.invoke(user));
-                Thread.sleep(waitTime);
-            }
-        }
-
-    }
-
-    //How long the testing will be
-    private void ExecuteTime(){
-        try {
-            TimeUnit.SECONDS.sleep(testingTime);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            //If defined loop times the tasks will only do once
+            if(loop != 0)
+                taskFlag = false;
         }
     }
 
-    private static void WaitTime(long waitTime){
-        try {
-            //System.out.println("Sleep");
-            TimeUnit.SECONDS.sleep(waitTime);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    //Shut down the threads
-    private <T extends ExecutorService> void ShutdownThreads(T threadPool){
+    /*
+    Shut down the threads in thread pool
+     */
+    private static <T extends ExecutorService> void shutdownThreads(T threadPool){
         threadPool.shutdown();
         try {
             if (!threadPool.awaitTermination(timeOut,TimeUnit.SECONDS)) {
@@ -200,16 +273,57 @@ public class Runner {
         }
     }
 
-    private void ShutdownUserExecutor(){
-        for (User user : users) {
-            ShutdownThreads(user.getClient().getClientExecutor());
+    /*
+    Shut down all the ExecutorService in each active user
+     */
+    private void shutdownAllUsers(){
+        for (Map.Entry<String, List<User>> entry :activeUsers.entrySet()) {
+            for(User user :entry.getValue())
+                shutdownThreads(user.getClient().getClientExecutor());
         }
     }
 
-    //CloseFile
-    private void CloseFile(){
+    /*
+    Close the CSV file
+     */
+    private void closeFile(){
         CsvOutput.closeFile();
     }
 
+    /*
+    The process of ending test for shape control testing
+     */
+    private void endTesting(){
+        taskFlag = false;
+        runnableFuture.cancel(true);
+
+        // Shutdown all user
+        shutdownAllUsers();
+        shutdownThreads(scheduledExecutorService);
+        logger.info("The testing END");
+    }
+
+    /*
+    Validate the user input
+    */
+    private void validateLoopTime(int loopTime) {
+        if (loopTime <= 0) {
+            throw new IllegalArgumentException("Loop time must be greater than 0");
+        }
+        logger.error("The loop times must greater than 0");
+    }
+
+    /*
+    Pass the related parameter to Env for the default testing strategy
+    */
+    static int getTestingTime(){
+        return testingTime;
+    }
+
+    static int getSpawnRate(){
+        return spawnRate;
+    }
+
+    static int getUserNum(){return userNum;}
 
 }

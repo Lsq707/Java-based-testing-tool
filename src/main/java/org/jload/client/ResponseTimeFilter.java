@@ -3,8 +3,8 @@ package org.jload.client;
 import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.client.ClientResponseContext;
 import jakarta.ws.rs.client.ClientResponseFilter;
-import org.jload.model.CustomResponse;
-import org.jload.output.CsvOutput;
+import org.jload.model.ResponseStat;
+import org.jload.response.Statistics;
 import org.jload.response.ByteProcess;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -15,6 +15,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+/*
+Client filter to compute the return type
+*/
 public class ResponseTimeFilter implements ClientResponseFilter {
     private static final Logger logger = LoggerFactory.getLogger(ResponseTimeFilter.class);
     @Override
@@ -46,7 +49,8 @@ public class ResponseTimeFilter implements ClientResponseFilter {
 
         logger.info(responseContext.toString());
 
-        writeToCSV(timeStamp, responseTime, label, String.valueOf(responseCode), statusInfo, responseMsg, dataType, success, failureMsg, bytesSent, bytesReceived, host);
+        Statistics.addStatistic(new ResponseStat(timeStamp, responseTime, label, String.valueOf(responseCode), statusInfo, responseMsg, dataType, success, failureMsg, bytesSent, bytesReceived, host));
+        //writeToCSV(timeStamp, responseTime, label, String.valueOf(responseCode), statusInfo, responseMsg, dataType, success, failureMsg, bytesSent, bytesReceived, host);
     }
 
     private long calculateResponseTime(long startTime, long endTime) {
@@ -69,14 +73,16 @@ public class ResponseTimeFilter implements ClientResponseFilter {
                     }
                     return stringBuilder.toString();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    logger.error("Error getClass {}: {}", this.getClass().getName(), e.getMessage(), e);
                 }
             }
         }
         return null;
     }
 
-    //Getting the error msg from server
+    /*
+    Get the error msg from server
+     */
     private String getFailureMsg(String responseMsg){
         String fMsg = null;
         if(responseMsg != null){
@@ -85,15 +91,6 @@ public class ResponseTimeFilter implements ClientResponseFilter {
         }
         return fMsg;
     }
-
-    private void writeToCSV(String timeStamp, long responseTime, String label, String responseCode, String statusInfo,
-                            String responseMsg, String dataType, boolean success, String failureMsg,
-                            long bytesSent, int bytesReceived, String host) {
-        if(CsvOutput.getWriter() == null)
-            return;
-        CsvOutput.writeToCsv(new CustomResponse(timeStamp, responseTime, label, responseCode, statusInfo, responseMsg, dataType, success, failureMsg, bytesSent, bytesReceived, host));
-    }
-
 }
 
 
