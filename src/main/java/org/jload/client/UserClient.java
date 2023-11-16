@@ -13,28 +13,30 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /*
-This class meant to create client based on the Jersey Client
-And able to get customized response
+This class meant to create client based on the Jersey Client for each user
 */
 public class UserClient {
     private static final Logger logger = LoggerFactory.getLogger(UserClient.class);
     private final Client client;
     //Assign a thread to user
-    private ExecutorService clientExecutor;
-    private String host;
+    private final ExecutorService clientExecutor;
+    private final String host;
 
     public UserClient(String host) {
         // Initialize client able to add config
         this.client = ClientBuilder.newBuilder().build();
         this.client.register(ResponseTimeFilter.class);
-        this.host = host;
+        this.host = (host != null) ? host : "";;
         clientExecutor = Executors.newVirtualThreadPerTaskExecutor();
-        if(host.isEmpty()){
-            logger.warn("NOTE: host is empty");
+        if(host == null || host.isEmpty()){
+            logger.warn("NOTE: Host is empty");
         }
 
     }
 
+    /*
+    Get the Executor for each user to execute their tasks
+     */
     public ExecutorService getClientExecutor(){
         return this.clientExecutor;
     }

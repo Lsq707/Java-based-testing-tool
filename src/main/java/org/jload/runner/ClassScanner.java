@@ -10,12 +10,15 @@ import java.util.Scanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/*
+Get the classes created in jLoadFile
+ */
 public class ClassScanner {
     private static final Logger logger = LoggerFactory.getLogger(ClassScanner.class);
     private static final String filePath = "src/main/java/org/jload/";
     private static final File file = new File(filePath + "jLoadFile.java");
     private static final String fileForClass = "org.jload.";
-    public static List<String> getDeclaredClasses() {
+    public static List<String> getDeclaredClasses(String type) {
         logger.info("Running in : {}",System.getProperty("user.dir"));
 
         List<String> classNames = new ArrayList<>();
@@ -27,8 +30,8 @@ public class ClassScanner {
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
 
-                if (line.contains("class") && line.contains("extends User")) {
-                    String className = line.substring(line.indexOf("class") + 6, line.indexOf("extends User")).trim();
+                if (line.contains("class") && line.contains("extends " + type)) {
+                    String className = line.substring(line.indexOf("class") + 6, line.indexOf("extends " + type)).trim();
                     classNames.add(className);
                 }
             }
@@ -37,26 +40,29 @@ public class ClassScanner {
         } catch (FileNotFoundException e) {
             logger.error("File not found: {}", e.getMessage(), e);
         }
-        logger.info("Users: {}", classNames);
+        logger.info("Found class: {}", classNames);
         return classNames;
     }
 
-    public static List<Class<?>> getClasses(){
+    public static List<Class<?>> getClasses(String type){
         List<Class<?>> classes = new ArrayList<>();
-        List<String> declaredClasses = getDeclaredClasses();
+        List<String> declaredClasses = getDeclaredClasses(type);
 
         if (declaredClasses.isEmpty()) {
-            logger.error("No classes found in the file.");
+            logger.error("No classes {} found in the file.", type);
         } else {
             for (String className : declaredClasses) {
                 try {
                     Class<?> cls = Class.forName(fileForClass + className);
                     classes.add(cls);
                 } catch (Exception e) {
-                    logger.error("Error getClass {}: {}", className, e.getMessage(), e);
+                    if(type.equals("User")) {
+                        logger.error("Error getClass {}: {}", className, e.getMessage(), e);
+                    }
                 }
             }
         }
         return classes;
     }
+
 }
