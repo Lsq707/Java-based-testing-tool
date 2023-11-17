@@ -2,13 +2,11 @@ package org.jload;
 
 import jakarta.ws.rs.client.Entity;
 import org.jload.model.ShapeTuple;
-import org.jload.runner.Env;
 import org.jload.runner.LoadTestShape;
 import org.jload.tasks.Task;
 import org.jload.user.User;
 import org.jload.user.UserParam;
 
-import java.util.Arrays;
 import java.util.List;
 
 @UserParam(
@@ -21,8 +19,8 @@ class MyUser extends User {
     void getMethod(){
         getClient().path("/First").get();
     }
-
      */
+
     @Task
     void postMethod(){
         String payload = "{\"key1\":\"value1\", \"key2\":\"value2\"}";
@@ -58,9 +56,14 @@ class CustomShape extends LoadTestShape {
             int MyUserSpqwnRate = 2;
             return List.of(new ShapeTuple("MyUser2", MyUserNum, MyUserSpqwnRate));
         }
+        if(getRunTime()>=6 && getRunTime() < 11){
+            return List.of(new ShapeTuple("MyUser2", 0, 2));
+        }
 
         return null;
     }
 }
 
- */
+*/
+
+

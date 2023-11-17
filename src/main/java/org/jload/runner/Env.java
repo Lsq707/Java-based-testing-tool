@@ -79,22 +79,47 @@ public class Env {
     private static LoadTestShape defaultShape(){
         int testingTime = Runner.getTestingTime();
         int spawnRate = Runner.getSpawnRate();
-        int userNumber = Runner.getUserNum();
-        int perUserNumber = userNumber/definedUsers.size();
-        int perUserRate = spawnRate/definedUsers.size();
+        int userCount = Runner.getUserNum();
+        int usersSize = definedUsers.size();
+
+        if (usersSize == 0) {
+            logger.error("No testing User found");
+            throw new IllegalStateException("No defined users available.");
+        }
+
+        int usersPerShape = userCount / usersSize;
+        final int[] remainingUsers = {userCount % usersSize};
+        int ratePerUser = spawnRate / usersSize;
+        final int[] remainingRate = {spawnRate % usersSize}; // Remaining spawn rate after equal distribution
 
         return new LoadTestShape() {
             @Override
             public List<ShapeTuple> tick() {
-                if(getRunTime() > testingTime)
+                if (getRunTime() > testingTime) {
                     return null;
-                List<ShapeTuple> res = new ArrayList<>();
-                for(Class<?> cls : definedUsers){
-                    res.add(new ShapeTuple(getClsName(cls),perUserNumber,perUserRate));
                 }
-                return res;
-            }
+                List<ShapeTuple> results = new ArrayList<>();
+                for (Class<?> userClass : definedUsers) {
+                    int thisUserCount = usersPerShape;
+                    int thisRatePerUser = ratePerUser;
 
+                    // Distributing remaining users
+                    if (remainingUsers[0] > 0) {
+                        thisUserCount++;
+                        remainingUsers[0]--;
+                    }
+
+                    // Distributing remaining spawn rate
+                    if (remainingRate[0] > 0) {
+                        thisRatePerUser++;
+                        remainingRate[0]--;
+                    }
+
+                    String className = getClsName(userClass);
+                    results.add(new ShapeTuple(className, thisUserCount, thisRatePerUser));
+                }
+                return results;
+            }
         };
     }
 

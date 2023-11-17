@@ -22,7 +22,7 @@ public class Main {
             //Runner runner = new Runner("/Users/liusiqi/Desktop/test.csv",2,1);
 
             //new Runner({loop},{locationOfOutput})
-            Runner runner = new Runner("/Users/liusiqi/Desktop/test2.csv",6,2,10);
+            Runner runner = new Runner("/Users/liusiqi/Desktop/test2.csv",10,3,12);
             //Start test
             runner.run();
         } catch (InterruptedException e) {

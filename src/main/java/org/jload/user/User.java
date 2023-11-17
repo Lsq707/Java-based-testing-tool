@@ -21,12 +21,7 @@ public class User implements Runnable{
     private final UserClient userClient;
     private UserParam userParam;
     //UserStatus as user Lifecycle
-    private UserStatus userStatus;
-    public enum UserStatus {
-        RUNNING,
-        WAITING,
-        STOPPING
-    }
+    private volatile Boolean taskFlag = true;
 
     //Default constructor
     public User(){
@@ -40,13 +35,6 @@ public class User implements Runnable{
         this.userClient = new UserClient(getUserParamHost());
     }
 
-    public UserStatus getUserStatus() {
-        return userStatus;
-    }
-
-    public void setUserStatus(UserStatus userStatus) {
-        this.userStatus = userStatus;
-    }
 
     public UserClient getClient() {return userClient;}
 
@@ -60,6 +48,13 @@ public class User implements Runnable{
         }
     }
 
+    public Boolean getTaskFlag() {
+        return taskFlag;
+    }
+
+    public void setTaskFlag(Boolean taskFlag) {
+        this.taskFlag = taskFlag;
+    }
 
     private String getUserParamHost(){
         return userParam != null ? userParam.getHost() : null;
@@ -73,7 +68,6 @@ public class User implements Runnable{
     @Override
     public void run() {
         try {
-            userStatus = UserStatus.RUNNING;
             //Assign virtual threads to each tasks in the user
             logger.info("User Running: {}", this.getClass().getName());
             Runner.runUsers(this);
@@ -91,12 +85,12 @@ public class User implements Runnable{
             return false;
         }
         User user = (User) o;
-        return Objects.equals(userClient, user.userClient) && Objects.equals(userParam, user.userParam) && userStatus == user.userStatus;
+        return Objects.equals(userClient, user.userClient) && Objects.equals(userParam, user.userParam);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userClient, userParam, userStatus);
+        return Objects.hash(userClient, userParam);
     }
 
     //Process the annotation
