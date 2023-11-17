@@ -38,18 +38,9 @@ public class Runner {
     private ConcurrentHashMap<String, List<User>> activeUsers;
     private ScheduledExecutorService scheduledExecutorService;
     private ScheduledFuture<?> runnableFuture;
-    private static Boolean taskFlag = true;
     private static volatile Boolean testFlag = true;
+    private long startTime;
 
-    private enum RunnerStatus {
-        READAY,
-        SPWANING,
-        RUNNING,
-        WAITING,
-        STOPPING,
-        STOPPED,
-        CLEANUP
-    }
 
     //Constructor START
     public Runner(int loopTime, String fileName, int userNum, int spawnRate, int testingTime) throws IOException {
@@ -63,17 +54,11 @@ public class Runner {
         activeUsers = new ConcurrentHashMap<>();
     }
 
-    public Runner() throws IOException {
-        this(1,null);
-    }
 
     public Runner(String fileName) throws IOException {
-        this(1,fileName);
+        this(fileName,0,0,Integer.MAX_VALUE/1000);
     }
 
-    public Runner(int loopTime) throws IOException {
-        this(loopTime,null);
-    }
 
     public Runner(int loopTime,String fileName) throws IOException {
         this(loopTime,fileName,0,0,Integer.MAX_VALUE);
@@ -119,10 +104,11 @@ public class Runner {
     check the condition each seconds to add or dispose users
      */
     private void executeInShapeControl(){
-        long startTime = System.currentTimeMillis();
+        startTime = System.currentTimeMillis();
         LoadTestShape loadTestShape = Env.initShape();
         scheduledExecutorService = Executors.newScheduledThreadPool(1);
         runnableFuture = scheduledExecutorService.scheduleAtFixedRate(() -> {
+            printOutActiveUsr();
             List<ShapeTuple> shapeTuples = loadTestShape.tick();
             if(shapeTuples == null) {
                 testFlag = false; //End the testing
@@ -137,6 +123,17 @@ public class Runner {
         }
         // Stop the test
         endTesting();
+    }
+
+    /*
+    FOR TEST
+    */
+    private void printOutActiveUsr(){
+        long duration = System.currentTimeMillis() - startTime;
+        System.out.println("Test Duration: " + String.valueOf(duration));
+        for (Map.Entry<String, List<User>> entry :activeUsers.entrySet()) {
+            System.out.println(entry.getKey() + " currentRunning: " + String.valueOf(entry.getValue().size()));
+        }
     }
 
     /*
@@ -165,7 +162,9 @@ public class Runner {
     private void disposeUser(String clsName){
         List<User> users = activeUsers.get(clsName);
         if(!users.isEmpty()) {
-            shutdownThreads(users.get(0).getClient().getClientExecutor());
+            User usr = users.get(0);
+            usr.setTaskFlag(false);
+            shutdownThreads(usr.getClient().getClientExecutor());
             users.remove(0);
         }
     }
@@ -242,7 +241,7 @@ public class Runner {
         ExecutorService taskExecutor = user.getClient().getClientExecutor();
         WaitTime waitTime = user.getWaitTimeStrategy();
         Method[] userTasks = user.getClass().getDeclaredMethods();
-        while (taskFlag) {
+        while (user.getTaskFlag()) {
             for (Method task : userTasks) {
                 if (!task.isAccessible()) {
                     task.setAccessible(true);
@@ -254,7 +253,7 @@ public class Runner {
             }
             //If defined loop times the tasks will only do once
             if(loop != 0)
-                taskFlag = false;
+                user.setTaskFlag(false);
         }
     }
 
@@ -294,7 +293,6 @@ public class Runner {
     The process of ending test for shape control testing
      */
     private void endTesting(){
-        taskFlag = false;
         runnableFuture.cancel(true);
 
         // Shutdown all user
