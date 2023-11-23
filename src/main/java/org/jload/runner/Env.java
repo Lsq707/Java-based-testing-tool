@@ -5,6 +5,7 @@ import org.jload.output.CsvOutput;
 import org.jload.output.CsvOutputFilter;
 import org.jload.output.HtmlOutput;
 import org.jload.response.Statistics;
+
 import org.jload.user.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,12 +23,14 @@ Process global parameters
 */
 public class Env {
     private static final Logger logger = LoggerFactory.getLogger(Env.class);
+
     static HashMap<String, Object> userVariables = new HashMap<>();
     static final Class<?> shapeClass = getShapeClass();
     private static List<Class<?>> definedUsers;
     private static String csvFilePath;
     private static String htmlFilePath;
     static String host;
+
 
     /*
     Get the customized shape class in jLoadFile
@@ -69,13 +72,15 @@ public class Env {
     /*
      Get the user class in jLoadFile
     */
+
     private static void getUserClass(){
+
         definedUsers = new ArrayList<>();
         List<Class<?>> Users = ClassScanner.getClasses("User");
         for (Class<?> cls : Users) {
             try {
                 if (User.class.isAssignableFrom(cls) && !cls.isInterface() && !Modifier.isAbstract(cls.getModifiers())) {
-                    //Check if the host was set externally if so update all the user class
+
                     definedUsers.add(cls);
                     logger.info("User class {} defined", cls.getName());
                 }
@@ -86,6 +91,7 @@ public class Env {
     }
 
     public static List<Class<?>> getUsers(){
+
         return definedUsers;
     }
 
@@ -135,7 +141,6 @@ public class Env {
             }
         };
     }
-
     /*
     Add Hook to close the resources when the program was interrupted
      */

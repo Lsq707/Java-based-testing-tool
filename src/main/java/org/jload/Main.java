@@ -1,5 +1,6 @@
 package org.jload;
 
+
 import org.jload.runner.Env;
 import org.jload.runner.EnvBuilder;
 
@@ -35,5 +36,6 @@ public class Main {
             Thread.currentThread().interrupt();
             System.out.println("Thread was interrupted, Failed to complete operation");
         }
+
     }
 }

@@ -14,8 +14,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+
 
 /*
 Client filter to compute the return type
@@ -32,6 +34,7 @@ public class ResponseTimeFilter implements ClientResponseFilter {
         logger.info("Response time: " + responseTime + " milliseconds");
 
         String label = "Http Request " + requestContext.getMethod();
+
         String host = requestContext.getUri().toString();
 
         int status = responseContext.getStatus();

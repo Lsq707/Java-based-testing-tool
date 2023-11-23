@@ -2,7 +2,9 @@ package org.jload;
 
 import jakarta.ws.rs.client.Entity;
 import org.jload.model.ShapeTuple;
+
 import org.jload.runner.Env;
+
 import org.jload.runner.LoadTestShape;
 import org.jload.tasks.Task;
 import org.jload.user.User;
@@ -22,7 +24,6 @@ class MyUser extends User {
         getClient("http://0.0.0.0:5000").path("/First").get();
     }
 
-
     @Task
     void postMethod(){
         String payload = "{\"key1\":\"value1\", \"key2\":\"value2\"}";
@@ -34,6 +35,7 @@ class MyUser extends User {
 @UserParam(
         host = "http://0.0.0.0:9000",
         waitTime = "constant(0)"
+
 )
 class MyUser2 extends User {
     @Task
@@ -48,7 +50,6 @@ class MyUser2 extends User {
     }
 
 }
-
 class CustomShape extends LoadTestShape {
 
     @Override
@@ -64,8 +65,6 @@ class CustomShape extends LoadTestShape {
             return List.of(new ShapeTuple("MyUser", 0, 1));
         }
 
-
         return null;
     }
 }
-

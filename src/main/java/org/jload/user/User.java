@@ -97,7 +97,6 @@ public class User implements Runnable{
             throw new RuntimeException(e);
         }
     }
-
     private void setTaskSet(){
         Method[] declaredMethods = this.getClass().getDeclaredMethods();
         List<Method> userTasks = new ArrayList<>();
@@ -125,16 +124,13 @@ public class User implements Runnable{
         }
         User user = (User) o;
 
-
         return Objects.equals(userClient, user.userClient) && Objects.equals(userParam, user.userParam);
-
 
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(userClient, userParam);
-
     }
 
     //Process the annotation
@@ -199,6 +195,7 @@ public class User implements Runnable{
         private void setHost(String host) {
             this.host = host;
         }
+
     }
 
 }

@@ -2,6 +2,7 @@ package org.jload.runner;
 
 import org.jload.model.ShapeTuple;
 import org.jload.user.User;
+
 import org.jload.user.WaitTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +52,7 @@ public class Runner {
     /*
     Initial the users declared in jLoadFile
     */
+
     private User initUser(Class<?> User){
         User userInstance = null;
         try {
@@ -124,7 +126,6 @@ public class Runner {
     }
 
     /*
-
     Adjust running user numbers
     */
     private synchronized void adjustUser(List<ShapeTuple> tick) {
@@ -234,7 +235,6 @@ public class Runner {
 
     }
 
-
     /*
     Run the tasks in certain user
     There are two ways running tasks
@@ -262,8 +262,6 @@ public class Runner {
             }
         }
     }
-
-
     /*
     Shut down the threads in thread pool
      */
@@ -280,6 +278,7 @@ public class Runner {
     }
 
     /*
+<<<<<<< HEAD
     Stop all the running mission
      */
     static void shutdownHook(){
