@@ -135,6 +135,7 @@ public class Env {
                     }
 
                     String className = getClsName(userClass);
+                    // The second tick is 0!!!!
                     results.add(new ShapeTuple(className, thisUserCount, thisRatePerUser));
                 }
                 return results;
@@ -148,7 +149,7 @@ public class Env {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             logger.info("Shutdown hook is running...");
             Runner.shutdownHook();
-            closeFile();
+            //closeFile();
         }));
     }
 
@@ -170,7 +171,7 @@ public class Env {
         //Start test
         runner.run();
 
-        //closeFile();
+        closeFile();
     }
 
 

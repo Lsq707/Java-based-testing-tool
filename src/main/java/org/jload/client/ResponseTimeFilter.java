@@ -31,7 +31,7 @@ public class ResponseTimeFilter implements ClientResponseFilter {
 
         long endTime = System.currentTimeMillis();
         long responseTime = calculateResponseTime(startTime, endTime);
-        logger.info("Response time: " + responseTime + " milliseconds");
+        //logger.info("Response time: " + responseTime + " milliseconds");
 
         String label = "Http Request " + requestContext.getMethod();
 

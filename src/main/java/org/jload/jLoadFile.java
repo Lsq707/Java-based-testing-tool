@@ -24,7 +24,7 @@ class MyUser extends User {
         getClient("http://0.0.0.0:5000").path("/First").get();
     }
 
-    @Task
+    //@Task
     void postMethod(){
         String payload = "{\"key1\":\"value1\", \"key2\":\"value2\"}";
         getClient().path("/First").post(Entity.json(payload));
@@ -50,7 +50,7 @@ class MyUser2 extends User {
     }
 
 }
-class CustomShape extends LoadTestShape {
+/*class CustomShape extends LoadTestShape {
 
     @Override
     public List<ShapeTuple> tick() {
@@ -67,4 +67,4 @@ class CustomShape extends LoadTestShape {
 
         return null;
     }
-}
+}*/

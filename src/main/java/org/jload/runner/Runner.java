@@ -89,7 +89,7 @@ public class Runner {
     Get the customized shape or default shape,
     check the condition each seconds to add or dispose users
     */
-    private void executeInShapeControl(){
+    private void executeInShapeControl() {
         LoadTestShape loadTestShape = Env.initShape();
         scheduledExecutorService = Executors.newScheduledThreadPool(1);
         startTime = System.currentTimeMillis();
@@ -104,6 +104,10 @@ public class Runner {
         }, 0, 1, TimeUnit.SECONDS);
         // Run for the scheduled time or schedule strategy
         while (true){
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+            }
             long duration = System.currentTimeMillis() - startTime;
             if(!testFlag || duration >= testingTime)
                 break;
@@ -179,7 +183,8 @@ public class Runner {
         for (Class<?> cls : definedUsers) {
             if(getClsName(cls).equals(clsName)) {
                 user = initUser(cls);
-                Thread.ofVirtual().start(user);  //start the user
+                //Thread.ofVirtual().start(user);  //start the user
+                Thread.ofPlatform().start(user);
             }
         }
         if(user != null) {
@@ -250,17 +255,24 @@ public class Runner {
             if (!task.isAccessible()) {
                 task.setAccessible(true);
             }
-            taskExecutor.submit(() -> task.invoke(user));
+            //taskExecutor.submit(() -> task.invoke(user));
+            try {
+                task.invoke(user);
+            }catch (Exception e) {
+                logger.error("Excpetion!!!", e);
+            }
             //test += 1;
-            if(waitTime.getWaitTime() == 0)
-                Thread.sleep(waitTime.getWaitTime()+1);
+            /*if(waitTime.getWaitTime() == 0)
+                Thread.sleep(waitTime.getWaitTime()+1);*/
             Thread.sleep(waitTime.getWaitTime());
 
         //If defined loop times the tasks will only do once and then dispose the user
             if(loop != 0) {
+                logger.info("Dispose user");
                 disposeUser(user);
             }
         }
+        logger.info("Task flag finish");
     }
     /*
     Shut down the threads in thread pool

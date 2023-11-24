@@ -27,9 +27,12 @@ public class Main {
              */
 
             Env.startTesting(new EnvBuilder()
-                    .setCsvFileName("/Users/liusiqi/Desktop/test2.csv")
-                    .setHtmlFile("/Users/liusiqi/Desktop/TRY2")
-                    .setHost("http://0.0.0.0:9000"));
+                    .setCsvFileName("test2.csv")
+                    .setHtmlFile("TRY2")
+                    .setUserNum(1)
+                    .setSpawnRate(1)
+                    .setTestingTime(30)
+                    .setHost("http://0.0.0.0:5000"));
 
 
         } catch (InterruptedException e) {
