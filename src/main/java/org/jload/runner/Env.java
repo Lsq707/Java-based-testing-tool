@@ -1,13 +1,20 @@
 package org.jload.runner;
 
 import org.jload.model.ShapeTuple;
+import org.jload.output.CsvOutput;
+import org.jload.output.CsvOutputFilter;
+import org.jload.output.HtmlOutput;
+import org.jload.response.Statistics;
+
 import org.jload.user.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -16,9 +23,14 @@ Process global parameters
 */
 public class Env {
     private static final Logger logger = LoggerFactory.getLogger(Env.class);
-    private static HashMap<String, Object> userVariables = new HashMap<>();
-    private static final Class<?> shapeClass = getShapeClass();
+
+    static HashMap<String, Object> userVariables = new HashMap<>();
+    static final Class<?> shapeClass = getShapeClass();
     private static List<Class<?>> definedUsers;
+    private static String csvFilePath;
+    private static String htmlFilePath;
+    static String host;
+
 
     /*
     Get the customized shape class in jLoadFile
@@ -60,12 +72,15 @@ public class Env {
     /*
      Get the user class in jLoadFile
     */
-    public static List<Class<?>> getUserClass(){
+
+    private static void getUserClass(){
+
         definedUsers = new ArrayList<>();
         List<Class<?>> Users = ClassScanner.getClasses("User");
         for (Class<?> cls : Users) {
             try {
                 if (User.class.isAssignableFrom(cls) && !cls.isInterface() && !Modifier.isAbstract(cls.getModifiers())) {
+
                     definedUsers.add(cls);
                     logger.info("User class {} defined", cls.getName());
                 }
@@ -73,6 +88,10 @@ public class Env {
                 logger.error("Error getting the definition of class {}: {}", cls.getName(), e.getMessage(), e);
             }
         }
+    }
+
+    public static List<Class<?>> getUsers(){
+
         return definedUsers;
     }
 
@@ -122,6 +141,37 @@ public class Env {
             }
         };
     }
+    /*
+    Add Hook to close the resources when the program was interrupted
+     */
+    public static void shutdownHook(){
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            logger.info("Shutdown hook is running...");
+            Runner.shutdownHook();
+            closeFile();
+        }));
+    }
+
+    /*
+    Initial the related class
+    Start the testing
+     */
+    public static void startTesting(EnvBuilder builder) throws IOException, InterruptedException {
+        //Init the Users
+        getUserClass();
+        host = builder.getHost();
+        csvFilePath = builder.getCsvFileName();
+        htmlFilePath = builder.getHtmlFile();
+
+        CsvOutput.createFile(csvFilePath);
+        Statistics.registerFilter(new CsvOutputFilter());
+
+        Runner runner = builder.runnerBuild();
+        //Start test
+        runner.run();
+
+        //closeFile();
+    }
 
 
     /*
@@ -147,5 +197,37 @@ public class Env {
         name = cls.getName().substring(lastDot+1);
         return name;
     }
+
+    static String getClsName(User user){
+        String name = null;
+        int lastDot = user.getClass().getName().lastIndexOf(".");
+        name = user.getClass().getName().substring(lastDot+1);
+        return name;
+    }
+
+
+
+    /*
+    Validate the user input
+    */
+    private static void validateLoopTime(int loopTime) {
+        if (loopTime <= 0) {
+            throw new IllegalArgumentException("Loop time must be greater than 0");
+        }
+        logger.error("The loop times must greater than 0");
+    }
+
+    /*
+   Close the CSV file
+   */
+    private static void closeFile(){
+        CsvOutput.closeFile();
+        //Generate html Repo
+        if(csvFilePath != null && htmlFilePath != null) {
+            HtmlOutput.generaHtml(csvFilePath, htmlFilePath);
+            logger.info("Generating html File");
+        }
+    }
+
 
 }

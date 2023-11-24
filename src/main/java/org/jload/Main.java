@@ -1,35 +1,41 @@
 package org.jload;
 
-import org.jload.output.CsvOutput;
-import org.jload.runner.Runner;
-import org.jload.user.User;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import org.jload.runner.Env;
+import org.jload.runner.EnvBuilder;
 
 public class Main {
 
-    private static final Logger logger = LoggerFactory.getLogger(CsvOutput.class);
     public static void main(String[] args) throws Exception {
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            logger.info("Shutdown hook is running...");
-            CsvOutput.closeFile();
-        }));
+        Env.shutdownHook();
 
         try {
-            // Your main program code here
-            //new Runner({locationOfOutput},{userPerSeconds},{testingTime})
-            //Runner runner = new Runner("/Users/liusiqi/Desktop/test.csv",2,1);
 
-            //new Runner({loop},{locationOfOutput})
-            Runner runner = new Runner("/Users/liusiqi/Desktop/test2.csv",10,3,12);
             //Start test
-            runner.run();
+            //LOOP
+            //Env.startTesting(new RunnerBuilder().setLoopTime(3).setCsvFileName("/Users/liusiqi/Desktop/test2.csv").setHtmlFile("/Users/liusiqi/Desktop/TRY2"));
+
+            //Metrics General
+            /*
+            Env.startTesting(new RunnerBuilder()
+                    .setCsvFileName("/Users/liusiqi/Desktop/test2.csv")
+                    .setHtmlFile("/Users/liusiqi/Desktop/TRY2")
+                    .setUserNum(20)
+                    .setSpawnRate(1)
+                    .setTestingTime(12));
+             */
+
+            Env.startTesting(new EnvBuilder()
+                    .setCsvFileName("/Users/liusiqi/Desktop/test2.csv")
+                    .setHtmlFile("/Users/liusiqi/Desktop/TRY2")
+                    .setHost("http://0.0.0.0:9000"));
+
+
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             System.out.println("Thread was interrupted, Failed to complete operation");
         }
-
 
     }
 }

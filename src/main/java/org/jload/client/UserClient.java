@@ -20,17 +20,14 @@ public class UserClient {
     private final Client client;
     //Assign a thread to user
     private final ExecutorService clientExecutor;
-    private final String host;
+    private static ThreadLocal<String> threadLocalHost = new ThreadLocal<>();
 
-    public UserClient(String host) {
+    public UserClient() {
         // Initialize client able to add config
         this.client = ClientBuilder.newBuilder().build();
         this.client.register(ResponseTimeFilter.class);
-        this.host = (host != null) ? host : "";;
         clientExecutor = Executors.newVirtualThreadPerTaskExecutor();
-        if(host == null || host.isEmpty()){
-            logger.warn("NOTE: Host is empty");
-        }
+
 
     }
 
@@ -52,13 +49,21 @@ public class UserClient {
     public Invocation.Builder path(String path){
         long startTime = System.currentTimeMillis();
         String timeStamp = getTimeStamp();
-        return client.target(host).path(path).request().property("startTime",startTime).property("timeStamp",timeStamp);
+        return client.target(threadLocalHost.get()).path(path).request().property("startTime",startTime).property("timeStamp",timeStamp);
+
     }
 
     public Invocation.Builder path(){
         long startTime = System.currentTimeMillis();
         String timeStamp = getTimeStamp();
-        return client.target(host).path("").request().property("startTime",startTime).property("timeStamp",timeStamp);
+        return client.target(threadLocalHost.get()).path("").request().property("startTime",startTime).property("timeStamp",timeStamp);
+    }
+
+    public Invocation.Builder path(String path, String rewrittenPath) {
+        long startTime = System.currentTimeMillis();
+        String timeStamp = getTimeStamp();
+        String finalPath = rewrittenPath != null ? rewrittenPath : path;
+        return client.target(threadLocalHost.get()).path(finalPath).request().property("startTime", startTime).property("timeStamp", timeStamp);
     }
 
     private String getTimeStamp(){
@@ -67,5 +72,12 @@ public class UserClient {
         return currentDateTime.format(formatter);
     }
 
+    public String getHost() {
+        return threadLocalHost.get();
+    }
+
+    public void setHost(String host) {
+        threadLocalHost.set(host);
+    }
 }
 

@@ -2,6 +2,8 @@ package org.jload.user;
 
 import org.jload.client.UserClient;
 import org.jload.runner.Runner;
+import org.jload.tasks.Task;
+import org.jload.tasks.TaskSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,6 +11,9 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 /*
@@ -21,22 +26,36 @@ public class User implements Runnable{
     private final UserClient userClient;
     private UserParam userParam;
     //UserStatus as user Lifecycle
-    private volatile Boolean taskFlag = true;
+    private Boolean taskFlag = true;
+    //Schedule the tasks
+    private TaskSet taskSet;
+
 
     //Default constructor
     public User(){
         fetchAnnotationParameters();
-        this.userClient = new UserClient(getUserParamHost());
+        this.userClient = new UserClient();
+        setTaskSet();
     }
 
     //Accept parameter
     public User(UserParam userParam){
         this.userParam = userParam;
-        this.userClient = new UserClient(getUserParamHost());
+        this.userClient = new UserClient();
+        setTaskSet();
     }
 
+    public UserClient getClient() {
+        userClient.setHost(getUserParamHost());
+        //System.out.println("User1: " + userClient.getHost());
+        return userClient;
+    }
 
-    public UserClient getClient() {return userClient;}
+    public UserClient getClient(String host) {
+        userClient.setHost(host);
+        //System.out.println("User2: " + userClient.getHost());
+        return userClient;
+    }
 
     //Check the super and child annotation and overwrite it
     private void fetchAnnotationParameters() {
@@ -56,9 +75,11 @@ public class User implements Runnable{
         this.taskFlag = taskFlag;
     }
 
-    private String getUserParamHost(){
+    public String getUserParamHost(){
         return userParam != null ? userParam.getHost() : null;
     }
+
+    public TaskSet getTaskSet(){return taskSet;}
 
     public <T extends WaitTime> T getWaitTimeStrategy(){
         return (T) this.userParam.getWaitTimeStrategy();
@@ -68,12 +89,29 @@ public class User implements Runnable{
     @Override
     public void run() {
         try {
+
             //Assign virtual threads to each tasks in the user
             logger.info("User Running: {}", this.getClass().getName());
             Runner.runUsers(this);
-        } catch (InterruptedException | InvocationTargetException | IllegalAccessException e) {
+        } catch (InvocationTargetException | IllegalAccessException | InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+    private void setTaskSet(){
+        Method[] declaredMethods = this.getClass().getDeclaredMethods();
+        List<Method> userTasks = new ArrayList<>();
+
+        for (Method method : declaredMethods) {
+            if (method.isAnnotationPresent(Task.class)) {
+                userTasks.add(method);
+            }
+        }
+
+        taskSet = new TaskSet(userTasks);
+    }
+
+    public void setUserParamHost(String host){
+        userParam.setHost(host);
     }
 
     @Override
@@ -85,7 +123,9 @@ public class User implements Runnable{
             return false;
         }
         User user = (User) o;
+
         return Objects.equals(userClient, user.userClient) && Objects.equals(userParam, user.userParam);
+
     }
 
     @Override
@@ -95,7 +135,7 @@ public class User implements Runnable{
 
     //Process the annotation
     public class UserParam {
-        private final String host;
+        private String host;
         private final String waitTime;
         private Between between = null;
         private Constant constant = null;
@@ -151,6 +191,11 @@ public class User implements Runnable{
             }
             return null; // None of the strategies are set
         }
+
+        private void setHost(String host) {
+            this.host = host;
+        }
+
     }
 
 }

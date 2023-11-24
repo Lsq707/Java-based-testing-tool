@@ -12,6 +12,7 @@ public @interface Task{
     String[] tag() default {};
     String subUrl() default  "";
     String name() default  "";
+    int weight() default 1;
 
     //response msg and task info
 }

@@ -27,7 +27,8 @@ public class Statistics {
 
     /*
     OverLoad if different types
-     */
+    */
+
     public static synchronized void addStatistic(ResponseStat responseStat) {
         long key = counter.incrementAndGet(); // Get a unique key
         statistics.put(key, responseStat);

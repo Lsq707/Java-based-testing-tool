@@ -15,6 +15,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+
 /*
 Client filter to compute the return type
 */
@@ -29,7 +33,8 @@ public class ResponseTimeFilter implements ClientResponseFilter {
         long responseTime = calculateResponseTime(startTime, endTime);
         logger.info("Response time: " + responseTime + " milliseconds");
 
-        String label = "Http Request" + requestContext.getMethod();
+        String label = "Http Request " + requestContext.getMethod();
+
         String host = requestContext.getUri().toString();
 
         int status = responseContext.getStatus();
@@ -47,7 +52,7 @@ public class ResponseTimeFilter implements ClientResponseFilter {
         String statusInfo = responseContext.getStatusInfo().toString();
         String dataType = requestContext.getHeaderString("Content-Type");
 
-        logger.info(responseContext.toString());
+        //logger.info(responseContext.toString());
 
         Statistics.addStatistic(new ResponseStat(timeStamp, responseTime, label, String.valueOf(responseCode), statusInfo, responseMsg, dataType, success, failureMsg, bytesSent, bytesReceived, host));
         //writeToCSV(timeStamp, responseTime, label, String.valueOf(responseCode), statusInfo, responseMsg, dataType, success, failureMsg, bytesSent, bytesReceived, host);
