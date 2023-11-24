@@ -2,8 +2,9 @@ package org.jload.runner;
 
 import org.jload.model.ShapeTuple;
 import org.jload.output.CsvOutput;
-import org.jload.output.CsvOutputFilter;
+import org.jload.output.HtmlCsvOutputFilter;
 import org.jload.output.HtmlOutput;
+import org.jload.output.RequestCsvOutputFilter;
 import org.jload.response.Statistics;
 
 import org.jload.user.User;
@@ -14,7 +15,6 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -23,14 +23,13 @@ Process global parameters
 */
 public class Env {
     private static final Logger logger = LoggerFactory.getLogger(Env.class);
-
     static HashMap<String, Object> userVariables = new HashMap<>();
     static final Class<?> shapeClass = getShapeClass();
     private static List<Class<?>> definedUsers;
-    private static String csvFilePath;
     private static String htmlFilePath;
     static String host;
-
+    public static String HtmlCsvPath;
+    public static String RequestCsvPath;
 
     /*
     Get the customized shape class in jLoadFile
@@ -160,11 +159,20 @@ public class Env {
         //Init the Users
         getUserClass();
         host = builder.getHost();
-        csvFilePath = builder.getCsvFileName();
         htmlFilePath = builder.getHtmlFile();
 
-        CsvOutput.createFile(csvFilePath);
-        Statistics.registerFilter(new CsvOutputFilter());
+        //if both null then no outputs only testing
+        if(builder.getCsvFileName() != null){
+            setRequestCsvPath(builder.getCsvFileName());
+            CsvOutput.createRequestCsvFile(RequestCsvPath);
+            Statistics.registerFilter(new RequestCsvOutputFilter());
+        }
+
+        if(htmlFilePath != null && builder.getCsvFileName() != null){
+            setHtmlCsvPath(builder.getCsvFileName());
+            CsvOutput.createHtmlCsvFile(HtmlCsvPath);
+            Statistics.registerFilter(new HtmlCsvOutputFilter());
+        }
 
         Runner runner = builder.runnerBuild();
         //Start test
@@ -173,6 +181,13 @@ public class Env {
         //closeFile();
     }
 
+    private static void setRequestCsvPath(String path){
+        RequestCsvPath = path + "_Request.csv";
+    }
+
+    private static void setHtmlCsvPath(String path){
+        HtmlCsvPath = path + "_Result.csv";
+    }
 
     /*
     Get the user Variable defined before
@@ -223,8 +238,8 @@ public class Env {
     private static void closeFile(){
         CsvOutput.closeFile();
         //Generate html Repo
-        if(csvFilePath != null && htmlFilePath != null) {
-            HtmlOutput.generaHtml(csvFilePath, htmlFilePath);
+        if(HtmlCsvPath != null && htmlFilePath != null) {
+            HtmlOutput.generateHtml(HtmlCsvPath, htmlFilePath);
             logger.info("Generating html File");
         }
     }

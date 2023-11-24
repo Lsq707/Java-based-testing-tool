@@ -26,6 +26,9 @@ public class ResponseTimeFilter implements ClientResponseFilter {
     private static final Logger logger = LoggerFactory.getLogger(ResponseTimeFilter.class);
     @Override
     public void filter(ClientRequestContext requestContext, ClientResponseContext responseContext) {
+        String rewrittenPath = null;
+        if(requestContext.getProperty("rewritten") != null)
+            rewrittenPath = (String) requestContext.getProperty("rewritten");
         long startTime = (Long) requestContext.getProperty("startTime");
         String timeStamp = (String) requestContext.getProperty("timeStamp");
 
@@ -54,7 +57,7 @@ public class ResponseTimeFilter implements ClientResponseFilter {
 
         //logger.info(responseContext.toString());
 
-        Statistics.addStatistic(new ResponseStat(timeStamp, responseTime, label, String.valueOf(responseCode), statusInfo, responseMsg, dataType, success, failureMsg, bytesSent, bytesReceived, host));
+        Statistics.addStatistic(new ResponseStat(timeStamp, responseTime, label, String.valueOf(responseCode), statusInfo, responseMsg, dataType, success, failureMsg, bytesSent, bytesReceived, host, rewrittenPath));
         //writeToCSV(timeStamp, responseTime, label, String.valueOf(responseCode), statusInfo, responseMsg, dataType, success, failureMsg, bytesSent, bytesReceived, host);
     }
 

@@ -27,7 +27,7 @@ public class Main {
              */
 
             Env.startTesting(new EnvBuilder()
-                    .setCsvFileName("/Users/liusiqi/Desktop/test2.csv")
+                    .setCsvFileName("/Users/liusiqi/Desktop/test")
                     .setHtmlFile("/Users/liusiqi/Desktop/TRY2")
                     .setHost("http://0.0.0.0:9000"));
 

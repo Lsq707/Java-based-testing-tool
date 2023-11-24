@@ -62,8 +62,7 @@ public class UserClient {
     public Invocation.Builder path(String path, String rewrittenPath) {
         long startTime = System.currentTimeMillis();
         String timeStamp = getTimeStamp();
-        String finalPath = rewrittenPath != null ? rewrittenPath : path;
-        return client.target(threadLocalHost.get()).path(finalPath).request().property("startTime", startTime).property("timeStamp", timeStamp);
+        return client.target(threadLocalHost.get()).path(path).request().property("startTime", startTime).property("timeStamp", timeStamp).property("rewritten", rewrittenPath);
     }
 
     private String getTimeStamp(){

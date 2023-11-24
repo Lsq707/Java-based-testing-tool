@@ -1,6 +1,5 @@
 package org.jload.output;
 
-import org.jload.runner.Env;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +15,7 @@ Using jmeter to generate HTML report
 */
 public class HtmlOutput {
     private static final Logger logger = LoggerFactory.getLogger(HtmlOutput.class);
-    public static void generaHtml(String csvFile, String outputFile) {
+    public static void generateHtml(String csvFile, String outputFile) {
         try {
             List<String> commands = new ArrayList<>();
             //Needs to have jmeter as system variables or set the full path to bin here
