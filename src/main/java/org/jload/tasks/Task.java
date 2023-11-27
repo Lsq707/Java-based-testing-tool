@@ -7,11 +7,14 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Task{
+public @interface Task {
 
     String[] tag() default {};
-    String subUrl() default  "";
-    String name() default  "";
+
+    String subUrl() default "";
+
+    String name() default "";
+
     int weight() default 1;
 
     //response msg and task info

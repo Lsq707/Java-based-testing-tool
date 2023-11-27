@@ -8,16 +8,17 @@ import java.util.List;
 public abstract class LoadTestShape {
     protected final long start_time;
     protected int testing_time = Integer.MAX_VALUE;
-    protected LoadTestShape(){
+
+    protected LoadTestShape() {
         start_time = System.nanoTime();
     }
 
     /*
     Return the executeTime
      */
-    protected double getRunTime(){
+    protected double getRunTime() {
         long currentTime = System.nanoTime();
-        return (currentTime - start_time)/ 1_000_000_000.0;
+        return (currentTime - start_time) / 1_000_000_000.0;
     }
 
     /*
@@ -25,4 +26,7 @@ public abstract class LoadTestShape {
      */
     public abstract List<ShapeTuple> tick();
 
+    public long getStartTime(){
+        return start_time;
+    }
 }

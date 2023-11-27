@@ -1,5 +1,7 @@
 package org.jload.model;
 
+import org.jload.runner.Runner;
+
 /*
 Response statistic
  */
@@ -26,7 +28,7 @@ public record ResponseStat(
 ) {
     //Customized constructor must back to origin generated one in record
     public ResponseStat(String timeStamp, long elapsed, String label, String responseCode, String statusInfo, String responseMessage, String dataType, boolean success, String failureMessage, long bytesSent, long bytesReceived, String host, String rewrittenPath) {
-        this(timeStamp, elapsed, label, responseCode, statusInfo, responseMessage, null, dataType, success, failureMessage, bytesSent, bytesReceived, 0, 0, host, 0, 0, 0,rewrittenPath);
+        this(timeStamp, elapsed, label, responseCode, statusInfo, responseMessage, null, dataType, success, failureMessage, bytesSent, bytesReceived, Runner.getUsedPlatformThread(), Runner.getThreadNum(), host, 0, 0, 0, rewrittenPath);
     }
 }
 

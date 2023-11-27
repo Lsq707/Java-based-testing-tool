@@ -3,7 +3,7 @@ package org.jload.model;
 /*
 The return type of customized testing strategy per seconds
  */
-public class ShapeTuple{
+public class ShapeTuple {
     private final String userCls;
     private final int clsTotalNum;
     private final int spawnRate;
@@ -21,7 +21,7 @@ public class ShapeTuple{
     }
 
     public ShapeTuple(String userCls) {
-        this(userCls,0,0);
+        this(userCls, 0, 0);
     }
 
     public String getUserCls() {
@@ -36,4 +36,12 @@ public class ShapeTuple{
         return spawnRate;
     }
 
+    @Override
+    public String toString() {
+        return "ShapeTuple{" +
+                "userCls='" + userCls + '\'' +
+                ", clsTotalNum=" + clsTotalNum +
+                ", spawnRate=" + spawnRate +
+                '}';
+    }
 }

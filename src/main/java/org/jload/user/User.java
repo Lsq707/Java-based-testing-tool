@@ -19,8 +19,8 @@ import java.util.Objects;
 /*
 This Class meant to simulate a real user's operation
 */
-@UserParam(waitTime = "constant(0)",host = "")
-public class User implements Runnable{
+@UserParam(waitTime = "constant(0)", host = "")
+public class User implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(User.class);
     //One client for each user
     private final UserClient userClient;
@@ -29,17 +29,17 @@ public class User implements Runnable{
     private Boolean taskFlag = true;
     //Schedule the tasks
     private TaskSet taskSet;
-
+    private String threadInfo;
 
     //Default constructor
-    public User(){
+    public User() {
         fetchAnnotationParameters();
         this.userClient = new UserClient();
         setTaskSet();
     }
 
     //Accept parameter
-    public User(UserParam userParam){
+    public User(UserParam userParam) {
         this.userParam = userParam;
         this.userClient = new UserClient();
         setTaskSet();
@@ -55,6 +55,10 @@ public class User implements Runnable{
         userClient.setHost(host);
         //System.out.println("User2: " + userClient.getHost());
         return userClient;
+    }
+
+    public String getThreadInfo() {
+        return threadInfo;
     }
 
     //Check the super and child annotation and overwrite it
@@ -75,13 +79,15 @@ public class User implements Runnable{
         this.taskFlag = taskFlag;
     }
 
-    public String getUserParamHost(){
+    public String getUserParamHost() {
         return userParam != null ? userParam.getHost() : null;
     }
 
-    public TaskSet getTaskSet(){return taskSet;}
+    public TaskSet getTaskSet() {
+        return taskSet;
+    }
 
-    public <T extends WaitTime> T getWaitTimeStrategy(){
+    public <T extends WaitTime> T getWaitTimeStrategy() {
         return (T) this.userParam.getWaitTimeStrategy();
     }
 
@@ -89,15 +95,17 @@ public class User implements Runnable{
     @Override
     public void run() {
         try {
-
             //Assign virtual threads to each tasks in the user
             logger.info("User Running: {}", this.getClass().getName());
-            Runner.runUsers(this);
+            threadInfo = Thread.currentThread().toString();
+            //Runner.runUsers(this);
+            taskSet.startTesting();
         } catch (InvocationTargetException | IllegalAccessException | InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
-    private void setTaskSet(){
+
+    private void setTaskSet() {
         Method[] declaredMethods = this.getClass().getDeclaredMethods();
         List<Method> userTasks = new ArrayList<>();
 
@@ -107,10 +115,10 @@ public class User implements Runnable{
             }
         }
 
-        taskSet = new TaskSet(userTasks);
+        taskSet = new TaskSet(this,userTasks);
     }
 
-    public void setUserParamHost(String host){
+    public void setUserParamHost(String host) {
         userParam.setHost(host);
     }
 
@@ -125,7 +133,6 @@ public class User implements Runnable{
         User user = (User) o;
 
         return Objects.equals(userClient, user.userClient) && Objects.equals(userParam, user.userParam);
-
     }
 
     @Override
@@ -156,27 +163,27 @@ public class User implements Runnable{
         }
 
         //Get the waitTime strategy defined
-        private void getWaitTime(){
-            if(waitTime.isEmpty()|| waitTime.isBlank())
+        private void getWaitTime() {
+            if (waitTime.isEmpty() || waitTime.isBlank()) {
                 return;
+            }
             if (waitTime.startsWith("between")) {
                 String[] values = waitTime.substring(waitTime.indexOf('(') + 1, waitTime.indexOf(')')).split(",");
                 long min = Long.parseLong(values[0]);
                 long max = Long.parseLong(values[1]);
-                between = new Between(min,max);
-            } else if(waitTime.startsWith("constant")) {
+                between = new Between(min, max);
+            } else if (waitTime.startsWith("constant")) {
                 String[] values = waitTime.substring(waitTime.indexOf('(') + 1, waitTime.indexOf(')')).split(",");
                 long waitTime = Long.parseLong(values[0]);
                 constant = new Constant(waitTime);
-            } else if(waitTime.startsWith("constantThroughput")) {
+            } else if (waitTime.startsWith("constantThroughput")) {
                 // Extract the min and max values from the string
                 String[] values = waitTime.substring(waitTime.indexOf('(') + 1, waitTime.indexOf(')')).split(",");
                 long taskRunsPerSecond = Long.parseLong(values[0]);
                 constantThroughput = new ConstantThroughput(taskRunsPerSecond);
-            }else { //Default
+            } else { //Default
                 constant = new Constant(0);
             }
-
         }
 
         public WaitTime getWaitTimeStrategy() {
@@ -195,7 +202,5 @@ public class User implements Runnable{
         private void setHost(String host) {
             this.host = host;
         }
-
     }
-
 }

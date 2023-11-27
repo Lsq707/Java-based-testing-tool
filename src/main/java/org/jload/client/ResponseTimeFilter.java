@@ -6,6 +6,7 @@ import jakarta.ws.rs.client.ClientResponseFilter;
 import org.jload.model.ResponseStat;
 import org.jload.response.Statistics;
 import org.jload.response.ByteProcess;
+import org.jload.runner.Runner;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,25 +19,27 @@ import java.io.InputStreamReader;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-
 /*
 Client filter to compute the return type
 */
 public class ResponseTimeFilter implements ClientResponseFilter {
     private static final Logger logger = LoggerFactory.getLogger(ResponseTimeFilter.class);
+
     @Override
     public void filter(ClientRequestContext requestContext, ClientResponseContext responseContext) {
         String rewrittenPath = null;
-        if(requestContext.getProperty("rewritten") != null)
+        if (requestContext.getProperty("rewritten") != null) {
             rewrittenPath = (String) requestContext.getProperty("rewritten");
+        }
         long startTime = (Long) requestContext.getProperty("startTime");
         String timeStamp = (String) requestContext.getProperty("timeStamp");
 
         long endTime = System.currentTimeMillis();
         long responseTime = calculateResponseTime(startTime, endTime);
-        logger.info("Response time: " + responseTime + " milliseconds");
+        logger.trace("Response time: " + responseTime + " milliseconds");
 
-        String label = "Http Request " + requestContext.getMethod();
+        //String label = "Http Request " + requestContext.getMethod();
+        String label = requestContext.getMethod();
 
         String host = requestContext.getUri().toString();
 
@@ -56,7 +59,9 @@ public class ResponseTimeFilter implements ClientResponseFilter {
         String dataType = requestContext.getHeaderString("Content-Type");
 
         //logger.info(responseContext.toString());
-
+        String threadInfo = Thread.currentThread().toString();
+        String workerName = threadInfo.split("@")[1];
+        Runner.addPlatformThread(workerName);
         Statistics.addStatistic(new ResponseStat(timeStamp, responseTime, label, String.valueOf(responseCode), statusInfo, responseMsg, dataType, success, failureMsg, bytesSent, bytesReceived, host, rewrittenPath));
         //writeToCSV(timeStamp, responseTime, label, String.valueOf(responseCode), statusInfo, responseMsg, dataType, success, failureMsg, bytesSent, bytesReceived, host);
     }
@@ -91,9 +96,9 @@ public class ResponseTimeFilter implements ClientResponseFilter {
     /*
     Get the error msg from server
      */
-    private String getFailureMsg(String responseMsg){
+    private String getFailureMsg(String responseMsg) {
         String fMsg = null;
-        if(responseMsg != null){
+        if (responseMsg != null) {
             JSONObject jsonResponse = new JSONObject(responseMsg); // Parsing the JSON
             fMsg = jsonResponse.optString("detail");
         }
