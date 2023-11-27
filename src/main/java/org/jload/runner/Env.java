@@ -38,7 +38,6 @@ public class Env {
     public static List<ResponseStat> responseStats = new ArrayList<>();
     public static DecimalFormat df = new DecimalFormat("#.##");
 
-
     /*
     Get the customized shape class in jLoadFile
     */
@@ -85,11 +84,11 @@ public class Env {
         for (Class<?> cls : Users) {
             try {
                 if (User.class.isAssignableFrom(cls) && !cls.isInterface() && !Modifier.isAbstract(cls.getModifiers())) {
-                    if(chosenUser) {
+                    if (chosenUser) {
+                        definedUsers.add(cls);
+                    } else {
                         definedUsers.add(cls);
                     }
-                    else
-                        definedUsers.add(cls);
                     logger.info("User class {} defined", cls.getName());
                 }
             } catch (Exception e) {

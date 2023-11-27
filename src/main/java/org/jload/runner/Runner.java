@@ -111,7 +111,7 @@ public class Runner {
                 } else {
                     adjustUser(shapeTuples);
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
                 logger.error("Error in Runner {}", e.getMessage(), e);
                 throw new RuntimeException("Testing stopped due to an error: " + e.getMessage(), e);
             }
@@ -145,7 +145,6 @@ public class Runner {
         logger.info("Requests: {} Fails: {} RPS: {} AvgResponseTime: {} FailRatio: {}",
                 responseNum, failNum, Env.df.format(rps * 1000), Env.df.format(avgResponseTime), Env.df.format(failRatio));
     }
-
 
     /*
     FOR TEST

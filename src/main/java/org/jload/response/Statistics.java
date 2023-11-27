@@ -35,8 +35,7 @@ public class Statistics {
             statistics.put(key, responseStat);
             //applyFilters(responseStat);
             filters.parallelStream().forEach(filter -> filter.process(responseStat)); // Run parallel，some filter took too much time
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             logger.error("Error in Statistic {}", e.getMessage(), e);
         }
     }
@@ -49,8 +48,6 @@ public class Statistics {
     }
 
   */
-
-
 }
 
 

@@ -115,7 +115,7 @@ public class User implements Runnable {
             }
         }
 
-        taskSet = new TaskSet(this,userTasks);
+        taskSet = new TaskSet(this, userTasks);
     }
 
     public void setUserParamHost(String host) {

@@ -6,6 +6,7 @@ import org.jload.runner.Env;
 import org.jload.runner.Runner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.util.concurrent.atomic.AtomicLong;
 
 public class CheckRatioFilter implements StatisticsFilter {
@@ -23,7 +24,7 @@ public class CheckRatioFilter implements StatisticsFilter {
         }
         totalResponseTime.addAndGet(responseStat.elapsed());
 
-        if(Env.checkFailRatio > 0 || Env.checkAvgResponseTime > 0) {
+        if (Env.checkFailRatio > 0 || Env.checkAvgResponseTime > 0) {
             checkMetrics();
         }
     }
@@ -46,6 +47,5 @@ public class CheckRatioFilter implements StatisticsFilter {
             System.exit(1);
         }
     }
-
 }
 

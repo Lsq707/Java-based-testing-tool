@@ -28,8 +28,7 @@ public class RequestCsvOutputFilter implements StatisticsFilter {
             if (!isNewlyCreated) {
                 tempRequestOutput.update(responseStat);
             }
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             logger.error("Error in RequestCsv {}", e.getMessage(), e);
         }
     }
@@ -53,8 +52,9 @@ public class RequestCsvOutputFilter implements StatisticsFilter {
         tempRequestOutput.setMaxResponseTime(responseStat.elapsed());
         tempRequestOutput.setRequestCount(1);
 
-        if(!responseStat.success())
+        if (!responseStat.success()) {
             tempRequestOutput.setFailureCount(1);
+        }
         return tempRequestOutput;
     }
 }

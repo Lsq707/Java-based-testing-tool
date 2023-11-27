@@ -12,7 +12,6 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Random;
 
-
 public class TaskSet {
     private static final Logger logger = LoggerFactory.getLogger(Runner.class);
     private final List<Method> userTasks;

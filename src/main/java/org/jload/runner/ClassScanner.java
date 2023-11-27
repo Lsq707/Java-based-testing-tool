@@ -63,7 +63,6 @@ public class ClassScanner {
         return classNames;
     }
 
-
     public static List<Class<?>> getClasses(String type) {
         List<Class<?>> classes = new ArrayList<>();
         List<String> declaredClasses = getDeclaredClasses(type);

@@ -54,7 +54,8 @@ public class RequestOutput {
 
     public synchronized void update(ResponseStat responseStat) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        LocalDateTime current = LocalDateTime.parse(responseStat.timeStamp(), formatter);;
+        LocalDateTime current = LocalDateTime.parse(responseStat.timeStamp(), formatter);
+        ;
         if (current.isAfter(maxTimeStamp)) {
             maxTimeStamp = current;
         }
@@ -78,12 +79,12 @@ public class RequestOutput {
             ResponseStat middle1 = requestCollections.stream().skip((requestCount / 2) - 1).findFirst().orElse(null);
             ResponseStat middle2 = requestCollections.stream().skip(requestCount / 2).findFirst().orElse(null);
             if (middle1 != null && middle2 != null) {
-                medianResponseTime = (long)((middle1.elapsed() + middle2.elapsed()) / 2);
+                medianResponseTime = (long) ((middle1.elapsed() + middle2.elapsed()) / 2);
             }
         } else {
             ResponseStat middle = requestCollections.stream().skip(requestCount / 2).findFirst().orElse(null);
             if (middle != null) {
-                medianResponseTime = (long)middle.elapsed();
+                medianResponseTime = (long) middle.elapsed();
             }
         }
     }
@@ -199,7 +200,7 @@ public class RequestOutput {
                 requestCount + "," +
                 failureCount + "," +
                 medianResponseTime + "," +
-                Env.df.format(averageResponseTime)+ "," +
+                Env.df.format(averageResponseTime) + "," +
                 minResponseTime + "," +
                 maxResponseTime + "," +
                 Env.df.format(averageContentSize) + "," +

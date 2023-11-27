@@ -26,7 +26,7 @@ public abstract class LoadTestShape {
      */
     public abstract List<ShapeTuple> tick();
 
-    public long getStartTime(){
+    public long getStartTime() {
         return start_time;
     }
 }
