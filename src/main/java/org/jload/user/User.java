@@ -95,6 +95,7 @@ public class User implements Runnable {
     @Override
     public void run() {
         try {
+
             //Assign virtual threads to each tasks in the user
             logger.info("User Running: {}", this.getClass().getName());
             threadInfo = Thread.currentThread().toString();

@@ -20,9 +20,8 @@ public class Main {
                     .setHtmlFile("/Users/liusiqi/Desktop/TRY2")
                     .setUserNum(1)
                     .setSpawnRate(1)
-                    .setCheckAvgResponseTime(3)
+                    //.setCheckAvgResponseTime(3)
                     .setTestingTime(3));
-            
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             System.out.println("Thread was interrupted, Failed to complete operation");

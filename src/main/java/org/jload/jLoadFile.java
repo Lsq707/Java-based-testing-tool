@@ -28,6 +28,7 @@ class MyUser extends User {
         getClient().path("/First").get();
     }
 
+
     /*
     @Task
     void postMethod() {
@@ -48,7 +49,6 @@ class MyUser2 extends User {
         //Env.putVariable("test","test");
         getClient().path("/Second").get();
     }
-
     @Task(weight = 0)
         //Will not execute
     void test() {
@@ -63,11 +63,9 @@ class CustomShape extends LoadTestShape {
 
     @Override
     public List<ShapeTuple> tick() {
-
         return List.of(new ShapeTuple("MyUser", 2, 1));
     }
 
 }
 
  */
-

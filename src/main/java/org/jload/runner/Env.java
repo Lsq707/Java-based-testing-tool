@@ -18,6 +18,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -79,6 +80,7 @@ public class Env {
     */
     private static void getUserClass() {
         boolean chosenUser = !(EnvBuilder.chosenUsers == null);
+
         definedUsers = new ArrayList<>();
         List<Class<?>> Users = ClassScanner.getClasses("User");
         for (Class<?> cls : Users) {

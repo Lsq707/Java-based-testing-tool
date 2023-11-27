@@ -63,6 +63,7 @@ public class ResponseTimeFilter implements ClientResponseFilter {
         String workerName = threadInfo.split("@")[1];
         Runner.addPlatformThread(workerName);
         Statistics.addStatistic(new ResponseStat(timeStamp, responseTime, label, String.valueOf(responseCode), statusInfo, responseMsg, dataType, success, failureMsg, bytesSent, bytesReceived, host, rewrittenPath));
+
         //writeToCSV(timeStamp, responseTime, label, String.valueOf(responseCode), statusInfo, responseMsg, dataType, success, failureMsg, bytesSent, bytesReceived, host);
     }
 
