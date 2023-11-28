@@ -17,10 +17,10 @@ public class Main {
 
             Env.startTesting(new EnvBuilder()
                     .setCsvFileName("/Users/liusiqi/Desktop/test")
-                    .setHtmlFile("/Users/liusiqi/Desktop/TRY2")
-                    .setUserNum(1)
+                    .setHtmlFile("/Users/liusiqi/Desktop/TRY2") // can comment it out if no need
+                    .setUserNum(3)
                     .setSpawnRate(1)
-                    //.setCheckAvgResponseTime(3)
+                    //.setCheckAvgResponseTime(3) // milliseconds
                     .setTestingTime(3));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

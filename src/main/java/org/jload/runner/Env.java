@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /*
 Process global parameters
@@ -114,10 +115,20 @@ public class Env {
             throw new IllegalStateException("No defined users available.");
         }
 
+        // Distribute
         int usersPerShape = userCount / usersSize;
-        final int[] remainingUsers = {userCount % usersSize};
-        int ratePerUser = spawnRate / usersSize;
-        final int[] remainingRate = {spawnRate % usersSize}; // Remaining spawn rate after equal distribution
+        int remainingUsers = userCount % usersSize;
+
+        // Target number of users
+        Map<Class<?>, Integer> initialUserCounts = new HashMap<>();
+        for (Class<?> userClass : definedUsers) {
+            int thisUserCount = usersPerShape;
+            if (remainingUsers > 0) {
+                thisUserCount++;
+                remainingUsers--;
+            }
+            initialUserCounts.put(userClass, thisUserCount);
+        }
 
         return new LoadTestShape() {
             @Override
@@ -126,21 +137,18 @@ public class Env {
                     return null;
                 }
                 List<ShapeTuple> results = new ArrayList<>();
+                int ratePerUser = spawnRate / usersSize;
+                int remainingRate = spawnRate % usersSize;
+
                 for (Class<?> userClass : definedUsers) {
-                    int thisUserCount = usersPerShape;
                     int thisRatePerUser = ratePerUser;
-
-                    // Distributing remaining users
-                    if (remainingUsers[0] > 0) {
-                        thisUserCount++;
-                        remainingUsers[0]--;
-                    }
-
-                    // Distributing remaining spawn rate
-                    if (remainingRate[0] > 0) {
+                    if (remainingRate > 0) {
                         thisRatePerUser++;
-                        remainingRate[0]--;
+                        remainingRate--;
                     }
+
+                    // Getting the onstage num
+                    int thisUserCount = initialUserCounts.get(userClass);
 
                     String className = getClsName(userClass);
                     results.add(new ShapeTuple(className, thisUserCount, thisRatePerUser));
@@ -149,6 +157,7 @@ public class Env {
             }
         };
     }
+
 
     /*
     Add Hook to close the resources when the program was interrupted

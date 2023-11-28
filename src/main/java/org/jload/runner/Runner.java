@@ -1,20 +1,17 @@
 package org.jload.runner;
 
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
 import org.jload.model.ShapeTuple;
 import org.jload.output.CheckRatioFilter;
 import org.jload.user.User;
-import org.jload.model.ResponseStat;
 
-import org.jload.user.WaitTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,7 +20,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 /*
@@ -42,7 +38,7 @@ public class Runner {
     public static int loop;
     private static volatile Boolean testFlag = true;
     private long startTime;
-    private static ExecutorService userExecutor = Executors.newVirtualThreadPerTaskExecutor();
+    private static final ExecutorService userExecutor = Executors.newVirtualThreadPerTaskExecutor();
     private static Set<String> assignedThread;
     private long testDuration;
 
@@ -88,7 +84,7 @@ public class Runner {
     * loop times
     * Shape (add or dispose users at different time)
     */
-    public void run() throws InterruptedException {
+    public void run() {
         Runnable runExecution = loop == 0 ? this::executeInShapeControl : this::executeInLoop;
         runExecution.run();
     }
@@ -188,7 +184,7 @@ public class Runner {
             User usr = users.get(0);
             usr.setTaskFlag(false);
             //shutdownThreads(usr.getClient().getClientExecutor());
-            usr.getClient().closeClient();
+            //usr.getClient().closeClient();
             users.remove(usr);
             if (users.isEmpty()) {
                 activeUsers.remove(clsName);
@@ -201,7 +197,7 @@ public class Runner {
         String uName = Env.getClsName(user);
         List<User> users = activeUsers.get(uName);
         //shutdownThreads(user.getClient().getClientExecutor());
-        user.getClient().closeClient();
+        //user.getClient().closeClient();
         users.remove(user);
         if (users.isEmpty()) {
             activeUsers.remove(uName);
@@ -403,19 +399,19 @@ public class Runner {
     /*
     Return the number of user threads
      */
-    public static int getThreadNum() {
-        int allThread = 0;
+    public static int getActiveUsersCount() {
+        int allUser = 0;
         for (Map.Entry<String, List<User>> entry : activeUsers.entrySet()) {
-            allThread += entry.getValue().size();
+            allUser += entry.getValue().size();
         }
-        return allThread;
+        return allUser;
     }
 
     public static void addPlatformThread(String platFormThreadName) {
         assignedThread.add(platFormThreadName);
     }
 
-    public static int getUsedPlatformThread() {
+    public static int getUsedPlatformThreadCount() {
         return assignedThread.size();
     }
 }

@@ -10,10 +10,11 @@ import org.jload.tasks.Task;
 import org.jload.user.User;
 import org.jload.user.UserParam;
 
+
 import java.util.List;
 
 @UserParam(
-        host = "http://0.0.0.0:9000",
+        host = "http://0.0.0.0:5000",
         waitTime = "constant(0)"
 )
 class MyUser extends User {
@@ -28,18 +29,19 @@ class MyUser extends User {
         getClient().path("/First").get();
     }
 
-
     /*
     @Task
     void postMethod() {
         String payload = "{\"key1\":\"value1\", \"key2\":\"value2\"}";
         getClient().path("/First").post(Entity.json(payload));
     }
+
      */
 }
-/*
+
+
 @UserParam(
-        host = "http://0.0.0.0:9000",
+        host = "http://0.0.0.0:5000",
         waitTime = "constant(0)"
 
 )
@@ -56,7 +58,8 @@ class MyUser2 extends User {
     }
 }
 
- */
+
+
 
 /*
 class CustomShape extends LoadTestShape {

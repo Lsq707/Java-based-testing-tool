@@ -71,7 +71,7 @@ public class CsvOutput {
         }
     }
 
-    public static synchronized void writeToHtmlCsv(ResponseStat responseStat) {
+    public static void writeToHtmlCsv(ResponseStat responseStat) {
         if (HtmlCsvWriter != null) {
             JMeterOutput jMeterOutput = new JMeterOutput(responseStat.timeStamp(), responseStat.elapsed(),
                     responseStat.label(), responseStat.responseCode(), responseStat.statusInfo(),

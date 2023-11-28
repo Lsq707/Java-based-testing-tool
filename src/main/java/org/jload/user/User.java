@@ -101,7 +101,7 @@ public class User implements Runnable {
             threadInfo = Thread.currentThread().toString();
             //Runner.runUsers(this);
             taskSet.startTesting();
-        } catch (InvocationTargetException | IllegalAccessException | InterruptedException e) {
+        } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
     }

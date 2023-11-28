@@ -1,11 +1,13 @@
 package org.jload.tasks;
 
+import org.jload.runner.Env;
 import org.jload.runner.Runner;
 import org.jload.user.User;
 import org.jload.user.WaitTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.security.auth.callback.TextInputCallback;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -75,14 +77,19 @@ public class TaskSet {
         return taskWeigth;
     }
 
-    public void startTesting() throws InvocationTargetException, IllegalAccessException, InterruptedException {
+    public void startTesting() throws InterruptedException {
         WaitTime waitTime = user.getWaitTimeStrategy();
         while (user.getTaskFlag()) {
             Method task = user.getTaskSet().getNextMethod();
             if (!task.isAccessible()) {
                 task.setAccessible(true);
             }
-            task.invoke(user);
+            try {
+                task.invoke(user);
+            }catch (Exception e){
+                logger.error("Task execute error: {}", e.getMessage(), e);
+                System.exit(1);
+            }
             Thread.sleep(waitTime.getWaitTime());
             //If defined loop times the tasks will only do once and then dispose the user
             loopTime += 1;
@@ -90,5 +97,6 @@ public class TaskSet {
                 Runner.disposeUser(user);
             }
         }
+        user.getClient().closeClient();
     }
 }
