@@ -3,9 +3,9 @@ package org.jload.output;
 import org.jload.model.ResponseStat;
 import org.jload.response.StatisticsFilter;
 
-public class CsvOutputFilter implements StatisticsFilter {
+public class JMeterCsvOutputFilter implements StatisticsFilter {
     @Override
     public void process(ResponseStat responseStat) {
-        CsvOutput.writeToCsv(responseStat);
+        CsvOutput.addResponse(responseStat);
     }
 }

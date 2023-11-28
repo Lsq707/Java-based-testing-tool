@@ -11,6 +11,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface UserParam {
     String host() default "";
-    String waitTime() default "";
 
+    String waitTime() default "";
 }

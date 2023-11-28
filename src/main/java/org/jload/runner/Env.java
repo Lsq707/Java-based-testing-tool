@@ -1,9 +1,12 @@
 package org.jload.runner;
 
+import org.jload.model.ResponseStat;
 import org.jload.model.ShapeTuple;
+import org.jload.output.CheckRatioFilter;
 import org.jload.output.CsvOutput;
-import org.jload.output.CsvOutputFilter;
-import org.jload.output.HtmlOutput;
+import org.jload.output.JMeterCsvOutputFilter;
+import org.jload.output.HtmlReport;
+import org.jload.output.RequestCsvOutputFilter;
 import org.jload.response.Statistics;
 
 import org.jload.user.User;
@@ -13,35 +16,40 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /*
 Process global parameters
 */
 public class Env {
     private static final Logger logger = LoggerFactory.getLogger(Env.class);
-
     static HashMap<String, Object> userVariables = new HashMap<>();
     static final Class<?> shapeClass = getShapeClass();
     private static List<Class<?>> definedUsers;
-    private static String csvFilePath;
     private static String htmlFilePath;
     static String host;
-
+    public static String HtmlCsvPath;
+    public static String RequestCsvPath;
+    public static double checkFailRatio = -1;
+    public static double checkAvgResponseTime = -1;
+    public static List<ResponseStat> responseStats = new ArrayList<>();
+    public static DecimalFormat df = new DecimalFormat("#.##");
 
     /*
     Get the customized shape class in jLoadFile
     */
-    private static Class<?> getShapeClass(){
+    private static Class<?> getShapeClass() {
         List<Class<?>> scanShapeClass = ClassScanner.getClasses("LoadTestShape");
-        if(scanShapeClass.size() > 1) {
+        if (scanShapeClass.size() > 1) {
             logger.error("Only one customized shape allowed");
             return null;
         }
-        if(scanShapeClass.isEmpty()) {
+        if (scanShapeClass.isEmpty()) {
             logger.info("Using default shape");
             return null;
         }
@@ -51,12 +59,11 @@ public class Env {
     /*
     Initial the shape class declared or default
      */
-    public static LoadTestShape initShape(){
+    public static LoadTestShape initShape() {
         LoadTestShape loadTestShape = null;
-        if(shapeClass == null){
+        if (shapeClass == null) {
             loadTestShape = defaultShape();
-        }
-        else if(LoadTestShape.class.isAssignableFrom(shapeClass) && !shapeClass.isInterface() && !Modifier.isAbstract(shapeClass.getModifiers())){
+        } else if (LoadTestShape.class.isAssignableFrom(shapeClass) && !shapeClass.isInterface() && !Modifier.isAbstract(shapeClass.getModifiers())) {
             try {
                 Constructor<?> constructor = shapeClass.getDeclaredConstructor();
                 constructor.setAccessible(true);
@@ -72,16 +79,19 @@ public class Env {
     /*
      Get the user class in jLoadFile
     */
-
-    private static void getUserClass(){
+    private static void getUserClass() {
+        boolean chosenUser = !(EnvBuilder.chosenUsers == null);
 
         definedUsers = new ArrayList<>();
         List<Class<?>> Users = ClassScanner.getClasses("User");
         for (Class<?> cls : Users) {
             try {
                 if (User.class.isAssignableFrom(cls) && !cls.isInterface() && !Modifier.isAbstract(cls.getModifiers())) {
-
-                    definedUsers.add(cls);
+                    if (chosenUser) {
+                        definedUsers.add(cls);
+                    } else {
+                        definedUsers.add(cls);
+                    }
                     logger.info("User class {} defined", cls.getName());
                 }
             } catch (Exception e) {
@@ -90,12 +100,11 @@ public class Env {
         }
     }
 
-    public static List<Class<?>> getUsers(){
-
+    public static List<Class<?>> getUsers() {
         return definedUsers;
     }
 
-    private static LoadTestShape defaultShape(){
+    private static LoadTestShape defaultShape() {
         int testingTime = Runner.getTestingTime();
         int spawnRate = Runner.getSpawnRate();
         int userCount = Runner.getUserNum();
@@ -106,10 +115,20 @@ public class Env {
             throw new IllegalStateException("No defined users available.");
         }
 
+        // Distribute
         int usersPerShape = userCount / usersSize;
-        final int[] remainingUsers = {userCount % usersSize};
-        int ratePerUser = spawnRate / usersSize;
-        final int[] remainingRate = {spawnRate % usersSize}; // Remaining spawn rate after equal distribution
+        int remainingUsers = userCount % usersSize;
+
+        // Target number of users
+        Map<Class<?>, Integer> initialUserCounts = new HashMap<>();
+        for (Class<?> userClass : definedUsers) {
+            int thisUserCount = usersPerShape;
+            if (remainingUsers > 0) {
+                thisUserCount++;
+                remainingUsers--;
+            }
+            initialUserCounts.put(userClass, thisUserCount);
+        }
 
         return new LoadTestShape() {
             @Override
@@ -118,21 +137,18 @@ public class Env {
                     return null;
                 }
                 List<ShapeTuple> results = new ArrayList<>();
+                int ratePerUser = spawnRate / usersSize;
+                int remainingRate = spawnRate % usersSize;
+
                 for (Class<?> userClass : definedUsers) {
-                    int thisUserCount = usersPerShape;
                     int thisRatePerUser = ratePerUser;
-
-                    // Distributing remaining users
-                    if (remainingUsers[0] > 0) {
-                        thisUserCount++;
-                        remainingUsers[0]--;
-                    }
-
-                    // Distributing remaining spawn rate
-                    if (remainingRate[0] > 0) {
+                    if (remainingRate > 0) {
                         thisRatePerUser++;
-                        remainingRate[0]--;
+                        remainingRate--;
                     }
+
+                    // Getting the onstage num
+                    int thisUserCount = initialUserCounts.get(userClass);
 
                     String className = getClsName(userClass);
                     results.add(new ShapeTuple(className, thisUserCount, thisRatePerUser));
@@ -141,10 +157,12 @@ public class Env {
             }
         };
     }
+
+
     /*
     Add Hook to close the resources when the program was interrupted
      */
-    public static void shutdownHook(){
+    public static void shutdownHook() {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             logger.info("Shutdown hook is running...");
             Runner.shutdownHook();
@@ -160,11 +178,24 @@ public class Env {
         //Init the Users
         getUserClass();
         host = builder.getHost();
-        csvFilePath = builder.getCsvFileName();
         htmlFilePath = builder.getHtmlFile();
 
-        CsvOutput.createFile(csvFilePath);
-        Statistics.registerFilter(new CsvOutputFilter());
+        //Whether to add ratio check
+        Statistics.registerFilter(new CheckRatioFilter());
+
+        //Whether generate CSV result
+        if (builder.getCsvFileName() != null) {
+            setRequestCsvPath(builder.getCsvFileName());
+            CsvOutput.createRequestCsvFile(RequestCsvPath);
+            Statistics.registerFilter(new RequestCsvOutputFilter());
+        }
+
+        //Whether to gengerate Html
+        if (htmlFilePath != null && builder.getCsvFileName() != null) {
+            setHtmlCsvPath(builder.getCsvFileName());
+            CsvOutput.createHtmlCsvFile(HtmlCsvPath);
+            Statistics.registerFilter(new JMeterCsvOutputFilter());
+        }
 
         Runner runner = builder.runnerBuild();
         //Start test
@@ -173,39 +204,44 @@ public class Env {
         //closeFile();
     }
 
+    private static void setRequestCsvPath(String path) {
+        RequestCsvPath = path + "_Request.csv";
+    }
+
+    private static void setHtmlCsvPath(String path) {
+        HtmlCsvPath = path + "_Result.csv";
+    }
 
     /*
     Get the user Variable defined before
      */
-    public static Object getVariable(String name){
+    public static Object getVariable(String name) {
         return userVariables.get(name);
     }
 
     /*
     Define the user Variable that can be used by other users or tasks
      */
-    public static void putVariable(String name, Object variable){
-        userVariables.put(name,variable);
+    public static void putVariable(String name, Object variable) {
+        userVariables.put(name, variable);
     }
 
     /*
     Get the class name without pkg name
     */
-    private static String getClsName(Class<?> cls){
+    private static String getClsName(Class<?> cls) {
         String name = null;
         int lastDot = cls.getName().lastIndexOf(".");
-        name = cls.getName().substring(lastDot+1);
+        name = cls.getName().substring(lastDot + 1);
         return name;
     }
 
-    static String getClsName(User user){
+    static String getClsName(User user) {
         String name = null;
         int lastDot = user.getClass().getName().lastIndexOf(".");
-        name = user.getClass().getName().substring(lastDot+1);
+        name = user.getClass().getName().substring(lastDot + 1);
         return name;
     }
-
-
 
     /*
     Validate the user input
@@ -218,16 +254,14 @@ public class Env {
     }
 
     /*
-   Close the CSV file
-   */
-    private static void closeFile(){
+    Close the CSV file
+    */
+    private static void closeFile() {
         CsvOutput.closeFile();
         //Generate html Repo
-        if(csvFilePath != null && htmlFilePath != null) {
-            HtmlOutput.generaHtml(csvFilePath, htmlFilePath);
+        if (HtmlCsvPath != null && htmlFilePath != null) {
+            HtmlReport.generateHtml(HtmlCsvPath, htmlFilePath);
             logger.info("Generating html File");
         }
     }
-
-
 }

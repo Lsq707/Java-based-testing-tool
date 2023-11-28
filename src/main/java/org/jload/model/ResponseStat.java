@@ -1,5 +1,7 @@
 package org.jload.model;
 
+import org.jload.runner.Runner;
+
 /*
 Response statistic
  */
@@ -21,13 +23,12 @@ public record ResponseStat(
         String host,
         long latency,
         long idleTime,
-        long connect
+        long connect,
+        String rewrittenPath
 ) {
     //Customized constructor must back to origin generated one in record
-    public ResponseStat(String timeStamp, long elapsed, String label, String responseCode, String statusInfo, String responseMessage, String dataType, boolean success, String failureMessage, long bytesSent, long bytesReceived, String host) {
-        this(timeStamp, elapsed, label, responseCode, statusInfo, responseMessage, null, dataType, success, failureMessage, bytesSent, bytesReceived, 0, 0, host, 0, 0, 0);
+    public ResponseStat(String timeStamp, long elapsed, String label, String responseCode, String statusInfo, String responseMessage, String dataType, boolean success, String failureMessage, long bytesSent, long bytesReceived, String host, String rewrittenPath) {
+        this(timeStamp, elapsed, label, responseCode, statusInfo, responseMessage, null, dataType, success, failureMessage, bytesSent, bytesReceived, Runner.getUsedPlatformThreadCount(), Runner.getActiveUsersCount(), host, 0, 0, 0, rewrittenPath);
     }
-
-    //Override the constructor for different filter
 }
 

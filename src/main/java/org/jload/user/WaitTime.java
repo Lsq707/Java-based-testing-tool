@@ -12,8 +12,8 @@ class Between implements WaitTime {
     private final Random random;
 
     public Between(double minWait, double maxWait) {
-        this.minWait = minWait*1000;
-        this.maxWait = maxWait*1000;
+        this.minWait = minWait * 1000;
+        this.maxWait = maxWait * 1000;
         this.random = new Random();
     }
 
@@ -28,7 +28,7 @@ class Constant implements WaitTime {
     private final long waitTime;
 
     public Constant(long waitTime) {
-        this.waitTime = waitTime*1000;
+        this.waitTime = waitTime * 1000;
     }
 
     @Override
@@ -44,7 +44,7 @@ class ConstantPacing implements WaitTime {
     private long lastWaitTime;
 
     public ConstantPacing(long waitTime) {
-        this.waitTime = waitTime*1000;
+        this.waitTime = waitTime * 1000;
         this.lastRunTime = System.currentTimeMillis();
         this.lastWaitTime = waitTime;
     }
@@ -65,7 +65,7 @@ class ConstantThroughput implements WaitTime {
     private ConstantPacing constantPacing;
 
     public ConstantThroughput(double taskRunsPerSecond) {
-        this.taskRunsPerSecond = taskRunsPerSecond*1000;
+        this.taskRunsPerSecond = taskRunsPerSecond * 1000;
         this.constantPacing = new ConstantPacing((long) (1000 / taskRunsPerSecond));
     }
 

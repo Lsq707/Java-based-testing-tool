@@ -25,13 +25,13 @@ public record JMeterOutput(
 
     @Override
     public String toString() {
-        return  timeStamp + "," +
+        return timeStamp + "," +
                 elapsed + "," +
                 label + "," +
                 responseCode + "," +
                 responseMessage + "," +
-                threadName  + "," +
-                dataType  + "," +
+                threadName + "," +
+                dataType + "," +
                 success + "," +
                 failureMessage + "," +
                 bytesSent + "," +
