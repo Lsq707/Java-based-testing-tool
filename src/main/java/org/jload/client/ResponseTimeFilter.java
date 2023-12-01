@@ -39,9 +39,9 @@ public class ResponseTimeFilter implements ClientResponseFilter {
         logger.trace("Response time: " + responseTime + " milliseconds");
 
         //String label = "Http Request " + requestContext.getMethod();
-        String label = requestContext.getMethod();
 
         String host = requestContext.getUri().toString();
+        String label = (rewrittenPath == null ? host : rewrittenPath) + " " + requestContext.getMethod();
 
         int status = responseContext.getStatus();
         boolean success = isSuccessful(status);

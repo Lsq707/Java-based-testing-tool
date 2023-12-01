@@ -17,7 +17,8 @@ Write result to csv file
  */
 public class CsvOutput {
     private static final Logger logger = LoggerFactory.getLogger(CsvOutput.class);
-    private static final String HTML_CSV_HEADERS = "timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,Latency,IdleTime,Connect\n";
+    //private static final String HTML_CSV_HEADERS = "timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,Latency,IdleTime,Connect\n";
+    private static final String HTML_CSV_HEADERS = "timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,IdleTime,Connect\n";
     private static final String REQUEST_CSV_HEADERS = "Type,Name,Request Count,Failure Count,Median Response Time,Average Response Time,Min Response Time,Max Response Time,Average Content Size,Requests/s,Failures/s,50%,66%,75%,80%,90%,95%,98%,99%,99.9%,99.99%,100%\n";
     private static FileWriter HtmlCsvWriter;
     private static FileWriter RequestCsvWriter;

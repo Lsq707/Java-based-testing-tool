@@ -6,7 +6,7 @@ The return type of customized testing strategy per seconds
 public class ShapeTuple {
     private final String userCls;
     private final int clsTotalNum;
-    private final int spawnRate;
+    private int spawnRate;
 
     /*
     param:
@@ -34,6 +34,10 @@ public class ShapeTuple {
 
     public int getSpawnRate() {
         return spawnRate;
+    }
+
+    public void setSpawnRate(int spawnRate) {
+        this.spawnRate = spawnRate;
     }
 
     @Override

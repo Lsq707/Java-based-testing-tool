@@ -31,8 +31,8 @@ public class Runner {
     private static int testingTime;
     private static int spawnRate;
     private static int userNum;
-    private static List<Class<?>> definedUsers;
-    private static ConcurrentHashMap<String, List<User>> activeUsers;
+    private static Set<Class<?>> definedUsers;
+    static ConcurrentHashMap<String, List<User>> activeUsers;
     static ScheduledExecutorService scheduledExecutorService;
     static ScheduledFuture<?> runnableFuture;
     public static int loop;
@@ -43,7 +43,7 @@ public class Runner {
     private long testDuration;
 
     //Usable in pkg
-    Runner(int loopTime, int userNum, int spawnRate, int testingTime) throws IOException {
+    Runner(int loopTime, int userNum, int spawnRate, int testingTime) {
         definedUsers = Env.getUsers();
         loop = loopTime;
         Runner.testingTime = testingTime * 1000;
@@ -100,7 +100,7 @@ public class Runner {
         runnableFuture = scheduledExecutorService.scheduleAtFixedRate(() -> {
             try {
                 printInfo();
-                //printOutActiveUsr();
+                logger.debug("Active Users: {}", printOutActiveUsr());
                 List<ShapeTuple> shapeTuples = loadTestShape.tick();
                 if (shapeTuples == null) {
                     testFlag = false;   //End the testing
@@ -138,25 +138,30 @@ public class Runner {
         double avgResponseTime = responseNum > 0 ? (double) totalResponseTime / responseNum : 0;
         double failRatio = responseNum > 0 ? (double) failNum / responseNum : 0;
 
-        logger.info("Requests: {} Fails: {} RPS: {} AvgResponseTime: {} FailRatio: {}",
+        String message = String.format("Requests: %d Fails: %d RPS: %s AvgResponseTime: %s FailRatio: %s",
                 responseNum, failNum, Env.df.format(rps * 1000), Env.df.format(avgResponseTime), Env.df.format(failRatio));
+
+        logger.info(message);
     }
 
     /*
     FOR TEST
     */
-    private void printOutActiveUsr() {
+    private List<String> printOutActiveUsr() {
+        List<String> info = new ArrayList<>();
         long duration = System.currentTimeMillis() - startTime;
-        System.out.println("Test Duration: " + String.valueOf(duration));
+        info.add("Test Duration: " + String.valueOf(duration));
         for (Map.Entry<String, List<User>> entry : activeUsers.entrySet()) {
-            System.out.println(entry.getKey() + " currentRunning: " + String.valueOf(entry.getValue().size()));
+            info.add(entry.getKey() + " currentRunning: " + String.valueOf(entry.getValue().size()));
         }
+        return  info;
     }
 
     /*
     Adjust running user numbers
     */
     private synchronized void adjustUser(List<ShapeTuple> tick) {
+        logger.debug("Shapes: {}", tick);
         for (ShapeTuple shapeTuple : tick) {
             logger.trace(String.valueOf(shapeTuple));
             long currNum = countActiveUser(shapeTuple.getUserCls());
@@ -164,11 +169,11 @@ public class Runner {
             long spawnRate = shapeTuple.getSpawnRate();
             long difference = desiredNum - currNum;
             if (difference > 0) {
-                for (int i = 0; i < difference && i <= spawnRate; i++) {
+                for (int i = 0; i < difference && i < spawnRate; i++) {
                     addUser(shapeTuple.getUserCls());
                 }
             } else if (difference < 0) {
-                for (int i = 0; i < -difference && i <= spawnRate; i++) {
+                for (int i = 0; i < -difference && i < spawnRate; i++) {
                     disposeUser(shapeTuple.getUserCls());
                 }
             }

@@ -20,7 +20,7 @@ public class ClassScanner {
     private static final String fileForClass = "org.jload.";
 
     public static List<String> getDeclaredClasses(String type) {
-        logger.info("Running in : {}", System.getProperty("user.dir"));
+        logger.debug("Running in : {}", System.getProperty("user.dir"));
         List<String> classNames = new ArrayList<>();
         boolean inMultiLineComment = false;
 
@@ -59,7 +59,7 @@ public class ClassScanner {
             logger.error("File not found: {}", e.getMessage(), e);
         }
 
-        logger.info("Found class: {}", classNames);
+        logger.info("Found {} class: {}", type, classNames);
         return classNames;
     }
 

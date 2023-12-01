@@ -38,7 +38,7 @@ public record JMeterOutput(
                 bytesReceived + "," +
                 grpThreads + "," +
                 allThreads + "," +
-                // URL + "," +
+                URL + "," +
                 latency + "," +
                 idleTime + "," +
                 connect + "\n";
