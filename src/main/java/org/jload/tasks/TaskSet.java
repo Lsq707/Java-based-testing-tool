@@ -1,7 +1,7 @@
 package org.jload.tasks;
 
-import org.jload.runner.Env;
 import org.jload.exceptions.TaskException;
+import org.jload.runner.Env;
 import org.jload.runner.Runner;
 import org.jload.user.User;
 import org.jload.user.WaitTime;
@@ -110,9 +110,8 @@ public class TaskSet {
             try {
                 task.invoke(user);
             }catch (Exception e){
-                logger.error("Task execute error: {}", e.getMessage(), e);
-                System.out.println("Error in user-" + user.getClass().getName() + " : task-" + task.getName());
-                throw new TaskException("Error in executing task: if the target service accessible ?");
+                logger.debug("Error in user- {} : task- {} : error: {}", user.getClass().getName(), task.getName(), e.getMessage(), e);
+                throw new TaskException("Error when execiting the " + user.getClass().getName() + "-" + task.getName());
             }
             Thread.sleep(waitTime.getWaitTime());
             //If defined loop times the tasks will only do once and then dispose the user

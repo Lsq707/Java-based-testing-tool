@@ -3,10 +3,15 @@ package org.jload;
 import org.jload.runner.Env;
 import org.jload.runner.EnvBuilder;
 import org.apache.commons.cli.*;
+import org.jload.runner.Runner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Main {
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) throws Exception {
+
 
         Env.shutdownHook();
 
@@ -84,7 +89,8 @@ public class Main {
             Env.startTesting(envBuilder);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            System.out.println("Thread was interrupted, Failed to complete operation");
+            logger.info("Thread was interrupted, Failed to complete operation");
+            logger.debug("Error in main: {}",e.getMessage(), e);
         }
     }
 
@@ -103,7 +109,7 @@ public class Main {
         options.addOption("html", "htmlLocation", true, "Directory path for storing HTML report files.");
         options.addOption("check_failRatio", "failRatioCheck", true, "Check fail Ratio per seconds");
         options.addOption("check_avgResponseTime", "responseTimeCheck", true,"Check avg response time per seconds");
-        options.addOption("shape", "customizedShape", true,"Specify the customShape");
+        options.addOption("shape", "customizedShape", true,"Specify the customShape when there are more than 1 customized shape defined");
 
         return options;
 

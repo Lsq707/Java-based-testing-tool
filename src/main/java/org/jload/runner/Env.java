@@ -33,7 +33,7 @@ public class Env {
     private static final Logger logger = LoggerFactory.getLogger(Env.class);
     static HashMap<String, Object> userVariables = new HashMap<>();
     private static Class<?> shapeClass;
-    static Set<Class<?>> definedUsers = getUserClass();
+    public static Set<Class<?>> definedUsers = getUserClass();
     private static String htmlFilePath;
     static String host;
     public static String HtmlCsvPath;
@@ -42,8 +42,8 @@ public class Env {
     public static double checkAvgResponseTime = -1;
     public static List<ResponseStat> responseStats = new ArrayList<>();
     public static DecimalFormat df = new DecimalFormat("#.##");
-    static Map<String, Integer> chosenUsers = new HashMap<>();
-    static String chosenShape;
+    public static Map<String, Integer> chosenUsers = new HashMap<>();
+    public static String chosenShape;
     //Chose users from cmd line or not
     static boolean chooseUser = false;
     static boolean safeExit = false;
@@ -52,23 +52,24 @@ public class Env {
     /*
     Get the customized shape class in jLoadFile
     */
-    private static Class<?> getShapeClass() {
+    private static Class<?> getShapeClass() throws ShapeException {
         List<Class<?>> scanShapeClass = ClassScanner.getClasses("LoadTestShape");
         if (scanShapeClass.size() > 1) {
             if (chosenShape == null) {
-                logger.error("Only one customized shape allowed");
+                throw new ShapeException("Only one customized shape allowed");
+                //logger.error("Only one customized shape allowed");
             } else {
                 for (Class<?> shapeClass : scanShapeClass) {
                     if (getClsName(shapeClass).equals(chosenShape)) {
                         return shapeClass;
                     }
                 }
-                logger.error("Specified Shape doesn't exist");
+                throw new ShapeException("Specified Shape doesn't exist");
+                //logger.error("Specified Shape doesn't exist");
             }
-            return null;
+            //return null;
         }
         if (scanShapeClass.isEmpty()) {
-            logger.info("Using default shape");
             return null;
         }
         return scanShapeClass.get(0);
@@ -83,7 +84,7 @@ public class Env {
             try {
                 loadTestShape = defaultShape();
             }catch (ShapeException e){
-                new RuntimeException(e);
+                logger.error("Error in Env class: {}",e.getMessage(), e);
             }
         } else if (LoadTestShape.class.isAssignableFrom(shapeClass) && !shapeClass.isInterface() && !Modifier.isAbstract(shapeClass.getModifiers())) {
             try {
@@ -101,7 +102,7 @@ public class Env {
     /*
      Get the user class in jLoadFile
     */
-    private static Set<Class<?>> getUserClass() {
+    public static Set<Class<?>> getUserClass() {
 
         definedUsers = new HashSet<>();
         List<Class<?>> Users = ClassScanner.getClasses("User");
@@ -125,12 +126,13 @@ public class Env {
         return definedUsers;
     }
 
-    private static LoadTestShape defaultShape() throws ShapeException {
+    public static LoadTestShape defaultShape() throws ShapeException {
+        logger.info("Using defaultShape");
         int testingTime = Runner.getTestingTime();
         int computeUserCount = Runner.getUserNum();
         int spawnRate = Runner.getSpawnRate();
         int userCount = Runner.getUserNum();
-        System.out.println(chosenUsers);
+        logger.debug("Default shape arguments-chosenUser: {}", chosenUsers);
         Map<String, Integer> userCounts = new HashMap<>();
 
         //Specified user class
@@ -163,7 +165,6 @@ public class Env {
                     userCounts.put(name, count);
                     computeUserCount -= count;
                     if (computeUserCount < 0) {
-                        logger.error("Error in user count distribution");
                         throw new ShapeException("Error in user count distribution");
                     }
                 } else {
@@ -173,19 +174,17 @@ public class Env {
         }
         //Distribute user count
         if (computeUserCount != 0 && !unassignedClass.isEmpty()) {
-            System.out.println("1: " + computeUserCount);
             Map<String, Integer> unassignedUserCounts = calculateUserCounts(computeUserCount, unassignedClass);
             userCounts.putAll(unassignedUserCounts);
-            System.out.println("2: " + userCounts);
+            logger.debug("Default shape arguments-DistributedUserCount: " + userCounts);
         }
 
         if (userCounts.isEmpty() && unassignedClass.isEmpty()) {
-            logger.error("No testing User found");
             throw new ShapeException("No testing User found");
         }
 
         int finalUsersSize = userCounts.size();
-
+        logger.debug("Default shape arguments-userCount: {}", userCounts);
         return new LoadTestShape() {
             @Override
             public List<ShapeTuple> tick() {
@@ -198,7 +197,7 @@ public class Env {
                 int ratePerUser = spawnRate / finalUsersSize;
                 int remainingRate = spawnRate % finalUsersSize;
 
-                Map<String, List<User>> activeUsersSnapshot = new HashMap<>(Runner.activeUsers);
+                Map<String, List<User>> activeUsersSnapshot = new HashMap<>(Runner.getActiveUsers());
 
                 for (Map.Entry<String, Integer> entry : userCounts.entrySet()) {
                     String key = entry.getKey();
@@ -275,7 +274,7 @@ public class Env {
     Initial the related class
     Start the testing
      */
-    public static void startTesting(EnvBuilder builder) throws IOException, InterruptedException {
+    public static void startTesting(EnvBuilder builder) throws IOException, InterruptedException, ShapeException {
         //Init the Users
         shapeClass = getShapeClass();
         host = builder.getHost();

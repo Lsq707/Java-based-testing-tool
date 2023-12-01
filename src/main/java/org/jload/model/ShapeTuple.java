@@ -1,5 +1,7 @@
 package org.jload.model;
 
+import java.util.Objects;
+
 /*
 The return type of customized testing strategy per seconds
  */
@@ -47,5 +49,22 @@ public class ShapeTuple {
                 ", clsTotalNum=" + clsTotalNum +
                 ", spawnRate=" + spawnRate +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ShapeTuple that = (ShapeTuple) o;
+        return clsTotalNum == that.clsTotalNum && spawnRate == that.spawnRate && Objects.equals(userCls, that.userCls);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(userCls, clsTotalNum, spawnRate);
     }
 }

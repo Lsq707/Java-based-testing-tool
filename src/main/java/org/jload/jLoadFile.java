@@ -69,7 +69,7 @@ class MyUser2 extends User {
 
 
 
-
+/*
 
 class CustomShape extends LoadTestShape {
 
@@ -98,3 +98,5 @@ class CustomShape2 extends LoadTestShape {
 }
 
  */
+
+

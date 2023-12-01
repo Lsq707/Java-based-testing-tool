@@ -31,10 +31,10 @@ public class Runner {
     private static int testingTime;
     private static int spawnRate;
     private static int userNum;
-    private static Set<Class<?>> definedUsers;
-    static ConcurrentHashMap<String, List<User>> activeUsers;
-    static ScheduledExecutorService scheduledExecutorService;
-    static ScheduledFuture<?> runnableFuture;
+    public static Set<Class<?>> definedUsers;
+    private static ConcurrentHashMap<String, List<User>> activeUsers;
+    public static ScheduledExecutorService scheduledExecutorService;
+    public static ScheduledFuture<?> runnableFuture;
     public static int loop;
     private static volatile Boolean testFlag = true;
     private long startTime;
@@ -389,15 +389,15 @@ public class Runner {
     /*
     Pass the related parameter to Env for the default testing strategy
     */
-    static int getTestingTime() {
+    public static int getTestingTime() {
         return testingTime;
     }
 
-    static int getSpawnRate() {
+    public static int getSpawnRate() {
         return spawnRate;
     }
 
-    static int getUserNum() {
+    public static int getUserNum() {
         return userNum;
     }
 
@@ -418,5 +418,9 @@ public class Runner {
 
     public static int getUsedPlatformThreadCount() {
         return assignedThread.size();
+    }
+
+    public static ConcurrentHashMap<String, List<User>> getActiveUsers() {
+        return activeUsers;
     }
 }
