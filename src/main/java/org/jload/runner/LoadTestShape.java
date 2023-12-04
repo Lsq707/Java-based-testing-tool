@@ -1,11 +1,14 @@
 package org.jload.runner;
 
 import org.jload.model.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public abstract class LoadTestShape {
+    private static final Logger logger = LoggerFactory.getLogger(LoadTestShape.class);
     protected final long start_time;
     protected int testing_time = Integer.MAX_VALUE;
 
@@ -16,9 +19,10 @@ public abstract class LoadTestShape {
     /*
     Return the executeTime
      */
-    protected double getRunTime() {
-        long currentTime = System.nanoTime();
-        return (currentTime - start_time) / 1_000_000_000.0;
+    protected long getRunTime() {
+        long duration = Runner.getTestDuration();
+        logger.debug("Get the duration in LoadTestShape: {}", duration);
+        return duration;
     }
 
     /*

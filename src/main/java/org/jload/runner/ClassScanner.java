@@ -68,7 +68,7 @@ public class ClassScanner {
         List<String> declaredClasses = getDeclaredClasses(type);
 
         if (declaredClasses.isEmpty()) {
-            logger.error("No classes {} found in the file.", type);
+            logger.error("No classes {} found in jLoad file.", type);
         } else {
             for (String className : declaredClasses) {
                 try {

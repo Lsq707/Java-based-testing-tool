@@ -78,13 +78,13 @@ public class Env {
     /*
     Initial the shape class declared or default
      */
-    public static LoadTestShape initShape()  {
+    public static LoadTestShape initShape() {
         LoadTestShape loadTestShape = null;
         if (shapeClass == null) {
             try {
                 loadTestShape = defaultShape();
-            }catch (ShapeException e){
-                logger.error("Error in Env class: {}",e.getMessage(), e);
+            } catch (ShapeException e) {
+                logger.error("Error in Env class: {}", e.getMessage(), e);
             }
         } else if (LoadTestShape.class.isAssignableFrom(shapeClass) && !shapeClass.isInterface() && !Modifier.isAbstract(shapeClass.getModifiers())) {
             try {
@@ -188,7 +188,7 @@ public class Env {
         return new LoadTestShape() {
             @Override
             public List<ShapeTuple> tick() {
-                if (getRunTime() > (double) testingTime /1000) {
+                if (getRunTime() > (double) testingTime / 1000) {
                     return null;
                 }
                 List<ShapeTuple> results = new ArrayList<>();
@@ -202,7 +202,7 @@ public class Env {
                 for (Map.Entry<String, Integer> entry : userCounts.entrySet()) {
                     String key = entry.getKey();
                     int value = entry.getValue();
-                    if(value == 0){
+                    if (value == 0) {
                         logger.warn("{} has no quota", key);
                     }
                     int currentRatePerUser = ratePerUser;

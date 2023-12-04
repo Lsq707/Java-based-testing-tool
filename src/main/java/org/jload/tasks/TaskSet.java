@@ -40,7 +40,7 @@ public class TaskSet {
             Annotation[] annotations = task.getAnnotations();
             for (Annotation myAnotation : annotations) {
                 if (myAnotation instanceof Task theTask) {
-                    if(Env.taskTag != null){
+                    if (Env.taskTag != null) {
                         //Filter
                         Set<String> tmpTag = new HashSet<>(Arrays.asList(theTask.tag().split("\\s+")));
                         if (hasOverlap(tmpTag, Env.taskTag)) {
@@ -48,9 +48,9 @@ public class TaskSet {
                         } else {
                             toRemove.add(task);
                         }
-                    }
-                    else
+                    } else {
                         sumWeight += theTask.weight();
+                    }
                     continue;
                 }
                 //Methods have no @task
@@ -98,7 +98,7 @@ public class TaskSet {
     public void startTesting() throws InterruptedException, TaskException {
         WaitTime waitTime = user.getWaitTimeStrategy();
         while (user.getTaskFlag()) {
-            if(userTasks.isEmpty()) { //No matching task
+            if (userTasks.isEmpty()) { //No matching task
                 Runner.disposeUser(user);
                 logger.warn("No matching tasks in: " + user.getClass().getName());
                 break;
@@ -109,9 +109,9 @@ public class TaskSet {
             }
             try {
                 task.invoke(user);
-            }catch (Exception e){
+            } catch (Exception e) {
                 logger.debug("Error in user- {} : task- {} : error: {}", user.getClass().getName(), task.getName(), e.getMessage(), e);
-                throw new TaskException("Error when execiting the " + user.getClass().getName() + "-" + task.getName());
+                throw new TaskException("Error when executing the " + user.getClass().getName() + "-" + task.getName());
             }
             Thread.sleep(waitTime.getWaitTime());
             //If defined loop times the tasks will only do once and then dispose the user

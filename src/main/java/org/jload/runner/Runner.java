@@ -1,7 +1,5 @@
 package org.jload.runner;
 
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.ClientBuilder;
 import org.jload.model.ShapeTuple;
 import org.jload.output.CheckRatioFilter;
 import org.jload.user.User;
@@ -9,7 +7,6 @@ import org.jload.user.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +18,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /*
 The strategy to run the testing
@@ -35,12 +34,15 @@ public class Runner {
     private static ConcurrentHashMap<String, List<User>> activeUsers;
     public static ScheduledExecutorService scheduledExecutorService;
     public static ScheduledFuture<?> runnableFuture;
+    public static ScheduledExecutorService scheduledLogService;
+    public static ScheduledFuture<?> logFuture;
     public static int loop;
-    private static volatile Boolean testFlag = true;
-    private long startTime;
+    private static AtomicBoolean testFlag = new AtomicBoolean(true);
+    ;
     private static final ExecutorService userExecutor = Executors.newVirtualThreadPerTaskExecutor();
     private static Set<String> assignedThread;
-    private long testDuration;
+    private static long testDuration = 0;
+    final Object lock = new Object(); //For interrupt timing if the shape returns null
 
     //Usable in pkg
     Runner(int loopTime, int userNum, int spawnRate, int testingTime) {
@@ -68,7 +70,7 @@ public class Runner {
                 setHost(userInstance);
             }
 
-            logger.info("Instance of {} created: {}", User.getName(), userInstance);
+            logger.debug("Instance of {} created: {}", User.getName(), userInstance);
         } catch (Exception e) {
             logger.error("Error creating an instance of class {}: {}", User.getName(), e.getMessage(), e);
         }
@@ -95,17 +97,19 @@ public class Runner {
     */
     private void executeInShapeControl() {
         scheduledExecutorService = Executors.newScheduledThreadPool(1);
-        startTime = System.currentTimeMillis();
         LoadTestShape loadTestShape = Env.initShape();
-        runnableFuture = scheduledExecutorService.scheduleAtFixedRate(() -> {
+        runnableFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
-                printInfo();
-                logger.debug("Active Users: {}", printOutActiveUsr());
-                List<ShapeTuple> shapeTuples = loadTestShape.tick();
-                if (shapeTuples == null) {
-                    testFlag = false;   //End the testing
+                if (testDuration++ >= testingTime / 1000) {
+                    setTestFlag(false);   //End the testing
                 } else {
-                    adjustUser(shapeTuples);
+                    logger.debug("Active Users: {}", printOutActiveUsr());
+                    List<ShapeTuple> shapeTuples = loadTestShape.tick();
+                    if (shapeTuples == null) {
+                        setTestFlag(false);
+                    } else {
+                        adjustUser(shapeTuples);
+                    }
                 }
             } catch (Exception e) {
                 logger.error("Error in Runner {}", e.getMessage(), e);
@@ -113,21 +117,33 @@ public class Runner {
             }
         }, 0, 1, TimeUnit.SECONDS);
         // Run for the scheduled time or schedule strategy
-        while (true) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            testDuration = System.currentTimeMillis() - startTime;
-            if (!testFlag || testDuration > testingTime) {
-                break;
+        while (testFlag.get()) {
+            synchronized (lock) {
+                try {
+                    lock.wait(1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                if (!testFlag.get()) {
+                    break;
+                }
+                printInfo();
             }
         }
+
         runnableFuture.cancel(true);
         shutdownThreads(scheduledExecutorService);
         // Stop the test
         endTesting();
+        printInfo(); //There are unrecorded request while waiting for the thread shut down
+    }
+
+    private void setTestFlag(boolean value) {
+        synchronized (lock) {
+            testFlag.set(value);
+            lock.notifyAll(); //Interrupt the sleep when the shape return null
+        }
+        logger.debug("Set the testing flag to {}", testFlag.get());
     }
 
     private void printInfo() {
@@ -149,12 +165,11 @@ public class Runner {
     */
     private List<String> printOutActiveUsr() {
         List<String> info = new ArrayList<>();
-        long duration = System.currentTimeMillis() - startTime;
-        info.add("Test Duration: " + String.valueOf(duration));
+        info.add("Test Duration: " + testDuration);
         for (Map.Entry<String, List<User>> entry : activeUsers.entrySet()) {
             info.add(entry.getKey() + " currentRunning: " + String.valueOf(entry.getValue().size()));
         }
-        return  info;
+        return info;
     }
 
     /*
@@ -188,8 +203,6 @@ public class Runner {
         if (!users.isEmpty()) {
             User usr = users.get(0);
             usr.setTaskFlag(false);
-            //shutdownThreads(usr.getClient().getClientExecutor());
-            //usr.getClient().closeClient();
             users.remove(usr);
             if (users.isEmpty()) {
                 activeUsers.remove(clsName);
@@ -201,8 +214,6 @@ public class Runner {
         user.setTaskFlag(false);
         String uName = Env.getClsName(user);
         List<User> users = activeUsers.get(uName);
-        //shutdownThreads(user.getClient().getClientExecutor());
-        //user.getClient().closeClient();
         users.remove(user);
         if (users.isEmpty()) {
             activeUsers.remove(uName);
@@ -235,33 +246,6 @@ public class Runner {
             logger.error("No such user class: {}", clsName);
         }
     }
-
-    /*
-    private void addUser(String clsName) {
-        User user = null;
-        for (Class<?> cls : definedUsers) {
-            if (getClsName(cls).equals(clsName)) {
-                user = initUser(cls);
-                Thread.ofVirtual().start(user);  //start the user
-            }
-        }
-        if (user != null) {
-            List<User> usersList;
-            if (activeUsers.containsKey(clsName)) {
-                usersList = activeUsers.get(clsName);
-            } else {
-                usersList = new ArrayList<User>();
-                activeUsers.put(clsName, usersList);
-            }
-            assert usersList != null;
-            usersList.add(user);
-        }
-        if (user == null) {
-            logger.error("No such user class: {}", clsName);
-        }
-    }
-
-     */
 
     /*
     Get the class name without pkg name
@@ -305,38 +289,6 @@ public class Runner {
     }
 
     /*
-    Run the tasks in certain user
-    There are two ways running tasks
-    * In loop times: the tasks in certain user will only execute once
-    * In shape control: The task in each user will execute constantly until the taskFlag which defined in endTesting()
-    */
-    /*
-    public static <T extends User> void runUsers(T user) throws InterruptedException, InvocationTargetException, IllegalAccessException {
-        ExecutorService taskExecutor = user.getClient().getClientExecutor();
-        WaitTime waitTime = user.getWaitTimeStrategy();
-        //int test = 0;
-        while (user.getTaskFlag()) {
-            Method task = user.getTaskSet().getNextMethod();
-            if (!task.isAccessible()) {
-                task.setAccessible(true);
-            }
-            taskExecutor.submit(() -> task.invoke(user));
-            //test += 1;
-            if (waitTime.getWaitTime() == 0) {
-                Thread.sleep(waitTime.getWaitTime() + 1);
-            }
-            Thread.sleep(waitTime.getWaitTime());
-
-            //If defined loop times the tasks will only do once and then dispose the user
-            if (loop != 0) {
-                disposeUser(user);
-            }
-        }
-    }
-
-     */
-
-    /*
     Shut down the threads in thread pool
      */
     private static <T extends ExecutorService> void shutdownThreads(T threadPool) {
@@ -366,14 +318,16 @@ public class Runner {
     Shut down all the ExecutorService in each active user
      */
     static void shutdownAllUsers() {
-        for (Map.Entry<String, List<User>> entry : activeUsers.entrySet()) {
-            String key = entry.getKey();
-            while (!entry.getValue().isEmpty()) {
-                disposeUser(key);
+        if (activeUsers != null) {
+            for (Map.Entry<String, List<User>> entry : activeUsers.entrySet()) {
+                String key = entry.getKey();
+                while (!entry.getValue().isEmpty()) {
+                    disposeUser(key);
+                }
+                activeUsers.remove(key);
             }
-            activeUsers.remove(key);
+            shutdownThreads(userExecutor);
         }
-        shutdownThreads(userExecutor);
     }
 
     /*
@@ -422,5 +376,9 @@ public class Runner {
 
     public static ConcurrentHashMap<String, List<User>> getActiveUsers() {
         return activeUsers;
+    }
+
+    public static long getTestDuration() {
+        return testDuration;
     }
 }

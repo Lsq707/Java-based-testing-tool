@@ -16,6 +16,7 @@ Using jmeter to generate HTML report
 */
 public class HtmlOutput {
     private static final Logger logger = LoggerFactory.getLogger(HtmlOutput.class);
+
     public static void generaHtml(String csvFile, String outputFile) {
         try {
             List<String> commands = new ArrayList<>();
@@ -41,9 +42,8 @@ public class HtmlOutput {
             // Handle the streams
             printStream(inputStream);
             printStream(errorStream);
-
         } catch (IOException | InterruptedException e) {
-            logger.error("Error getting in the HtmlOutput Class {}",  e.getMessage(), e);
+            logger.error("Error getting in the HtmlOutput Class {}", e.getMessage(), e);
         }
     }
 
@@ -58,5 +58,4 @@ public class HtmlOutput {
             }
         }
     }
-
 }

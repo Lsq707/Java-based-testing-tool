@@ -102,14 +102,14 @@ public class EnvBuilder {
     // Build method
     public Runner runnerBuild() throws IOException {
 
-        if(userNum == -1 && Env.chosenUsers.isEmpty()){  //If the total user count is unknown, use the count of user class instead.
+        if (userNum == -1 && Env.chosenUsers.isEmpty()) {  //If the total user count is unknown, use the count of user class instead.
             userNum = Env.definedUsers.size();
-        }
-        else if(userNum == -1){ // the count of user class chosen
-            if(assignedUserCount(Env.chosenUsers)){ // the count of user class + assigned user count
+        } else if (userNum == -1) { // the count of user class chosen
+            if (assignedUserCount(Env.chosenUsers)) { // the count of user class + assigned user count
                 userNum = getUseCount();
+            } else {
+                userNum = Env.chosenUsers.size();
             }
-            else userNum = Env.chosenUsers.size();
         }
 
         return new Runner(loopTime, userNum, spawnRate, testingTime);

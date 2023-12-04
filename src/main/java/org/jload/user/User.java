@@ -97,7 +97,7 @@ public class User implements Runnable {
         try {
             taskSet.startTesting();
         } catch (InterruptedException | TaskException e) {
-            logger.error("User {} got error {}",this.getClass().getName(),e.getMessage(),e);
+            logger.error("User {} got error {}", this.getClass().getName(), e.getMessage(), e);
             throw new RuntimeException(e);
         }
         logger.debug("User Ended: {}", this.getClass().getName());

@@ -38,8 +38,8 @@ public class Main {
             if (cmd.hasOption("Loop")) {
                 envBuilder.setLoopTime(Integer.parseInt(cmd.getOptionValue("Loop")));
             }
-            if (cmd.hasOption("testingDuration")) {
-                envBuilder.setTestingTime(Integer.parseInt(cmd.getOptionValue("testingDuration")));
+            if (cmd.hasOption("Duration")) {
+                envBuilder.setTestingTime(Integer.parseInt(cmd.getOptionValue("Duration")));
             }
             if (cmd.hasOption("csvLocation")) {
                 envBuilder.setCsvFileName(cmd.getOptionValue("csvLocation"));
@@ -50,8 +50,8 @@ public class Main {
             if (cmd.hasOption("spawnRate")) {
                 envBuilder.setSpawnRate(Integer.parseInt(cmd.getOptionValue("spawnRate")));
             }
-            if (cmd.hasOption("totalUserNumber")) {
-                envBuilder.setUserNum(Integer.parseInt(cmd.getOptionValue("totalUserNumber")));
+            if (cmd.hasOption("totalUserCount")) {
+                envBuilder.setUserNum(Integer.parseInt(cmd.getOptionValue("totalUserCount")));
             }
             if (cmd.hasOption("failRatioCheck")) {
                 envBuilder.setCheckFailRatio(Double.parseDouble(cmd.getOptionValue("failRatioCheck")));
@@ -62,8 +62,8 @@ public class Main {
             if (cmd.hasOption("customizedShape")) {
                 envBuilder.setChosenShape(cmd.getOptionValue("customizedShape"));
             }
-            if (cmd.hasOption("taskTag")) {
-                envBuilder.setTaskTags(cmd.getOptionValue("taskTag"));
+            if (cmd.hasOption("tag")) {
+                envBuilder.setTaskTags(cmd.getOptionValue("tag"));
             }
 
 
@@ -91,7 +91,13 @@ public class Main {
             Thread.currentThread().interrupt();
             logger.info("Thread was interrupted, Failed to complete operation");
             logger.debug("Error in main: {}",e.getMessage(), e);
+        } catch (ParseException e) {
+            logger.info(e.getMessage());
+            // Automatically generate the help statement
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("commandline", options);
         }
+
     }
 
     private static Options getOptions() {
@@ -99,12 +105,12 @@ public class Main {
 
         options.addOption("h", "host", true, "Host name");
         options.addOption("i", "Loop", true, "Indicates the number of iterations to run each user task");
-        options.addOption("t", "testingDuration", true, "Sets the duration of the testing period in seconds");
+        options.addOption("d", "Duration", true, "Sets the duration of the testing period in seconds");
         options.addOption("r", "spawnRate", true, "Rate to spawn users at (users per second)");
         options.addOption("u", "user", true, "Select specific user class for testing");
         options.addOption("uc", "userCount", true, "Specify the number of users to simulate for each chosen user type");
-        options.addOption("um", "totalUserNumber", true, "Total number of users involved in the testing process");
-        options.addOption("tag", "taskTag", true, "Specify task tags");
+        options.addOption("ut", "totalUserCount", true, "Total number of users involved in the testing process");
+        options.addOption("t", "Tag", true, "Specify task tags");
         options.addOption("csv", "csvLocation", true, "Directory path for storing CSV files");
         options.addOption("html", "htmlLocation", true, "Directory path for storing HTML report files.");
         options.addOption("check_failRatio", "failRatioCheck", true, "Check fail Ratio per seconds");

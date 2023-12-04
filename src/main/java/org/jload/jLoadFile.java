@@ -48,7 +48,6 @@ class MyUser extends User {
      */
 }
 
-
 @UserParam(
         host = "http://0.0.0.0:5000",
         waitTime = "constant(0)"
@@ -60,6 +59,7 @@ class MyUser2 extends User {
         //Env.putVariable("test","test");
         getClient().path("/Second").get();
     }
+
     @Task(weight = 0)
         //Will not execute
     void test() {
@@ -87,16 +87,21 @@ class CustomShape extends LoadTestShape {
 }
 
 
-/*
 class CustomShape2 extends LoadTestShape {
 
     @Override
     public List<ShapeTuple> tick() {
-        return List.of(new ShapeTuple("MyUser2", 2, 1));
+        if (getRunTime() < 3) {
+            return List.of(new ShapeTuple("MyUser", 2, 1));
+        }
+        return  null;
     }
 
 }
 
  */
+
+
+
 
 
