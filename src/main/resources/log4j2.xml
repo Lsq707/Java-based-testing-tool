@@ -2,11 +2,13 @@
 <Configuration>
   <Properties>
     <Property name="log.pattern">%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n</Property>
+    <Property name="console.pattern">%d{yyyy-MM-dd HH:mm:ss} %logger{36} - %msg%n</Property>
+
   </Properties>
   <Appenders>
     <!-- to console -->
     <Console name="console" target="SYSTEM_OUT">
-      <PatternLayout pattern="${log.pattern}" />
+      <PatternLayout pattern="${console.pattern}" />
     </Console>
     <!-- to file -->
     <File name="logFile" fileName="logs/jload.log" append="false">

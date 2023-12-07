@@ -21,7 +21,6 @@ public class Statistics {
     private static final ConcurrentHashMap<Long, ResponseStat> statistics = new ConcurrentHashMap<>();
     //For unique keys
     private static final AtomicLong counter = new AtomicLong(0);
-
     public static void registerFilter(StatisticsFilter filter) {
         filters.add(filter);
     }
@@ -46,7 +45,6 @@ public class Statistics {
             filter.process(responseStat);
         }
     }
-
   */
 }
 

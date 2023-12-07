@@ -68,6 +68,14 @@
         <version>5.7.0</version>
         <scope>test</scope>
       </dependency>
+
+      <!-- AtomicDouble -->
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>31.0.1-jre</version>
+      </dependency>
+
     </dependencies>
 
   </dependencyManagement>
@@ -140,6 +148,12 @@
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
+
   </dependencies>
 
 </project>

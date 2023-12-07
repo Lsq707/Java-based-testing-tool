@@ -7,7 +7,6 @@ import org.jload.output.CheckRatioFilter;
 import org.jload.output.CsvOutput;
 import org.jload.output.JMeterCsvOutputFilter;
 import org.jload.output.HtmlReport;
-import org.jload.output.RequestCsvOutputFilter;
 import org.jload.response.Statistics;
 
 import org.jload.user.User;
@@ -19,7 +18,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -31,22 +29,21 @@ Process global parameters
 */
 public class Env {
     private static final Logger logger = LoggerFactory.getLogger(Env.class);
-    static HashMap<String, Object> userVariables = new HashMap<>();
+    private static final HashMap<String, Object> userVariables = new HashMap<>();
     private static Class<?> shapeClass;
-    public static Set<Class<?>> definedUsers = getUserClass();
+    private static Set<Class<?>> definedUsers = getUserClass();
     private static String htmlFilePath;
-    static String host;
+    private static String host;
     public static String HtmlCsvPath;
-    public static String RequestCsvPath;
+    //public static String RequestCsvPath;
     public static double checkFailRatio = -1;
     public static double checkAvgResponseTime = -1;
-    public static List<ResponseStat> responseStats = new ArrayList<>();
-    public static DecimalFormat df = new DecimalFormat("#.##");
+    public static DecimalFormat df = new DecimalFormat("0.00");
     public static Map<String, Integer> chosenUsers = new HashMap<>();
     public static String chosenShape;
     //Chose users from cmd line or not
-    static boolean chooseUser = false;
-    static boolean safeExit = false;
+    public static boolean chooseUser = false;
+    public static boolean safeExit = false;
     public static Set<String> taskTag;
 
     /*
@@ -102,7 +99,7 @@ public class Env {
     /*
      Get the user class in jLoadFile
     */
-    public static Set<Class<?>> getUserClass() {
+    private static Set<Class<?>> getUserClass() {
 
         definedUsers = new HashSet<>();
         List<Class<?>> Users = ClassScanner.getClasses("User");
@@ -284,10 +281,11 @@ public class Env {
         Statistics.registerFilter(new CheckRatioFilter());
 
         //Whether generate CSV result
+
         if (builder.getCsvFileName() != null) {
-            setRequestCsvPath(builder.getCsvFileName());
-            CsvOutput.createRequestCsvFile(RequestCsvPath);
-            Statistics.registerFilter(new RequestCsvOutputFilter());
+            //setRequestCsvPath(builder.getCsvFileName());
+            //CsvOutput.createRequestCsvFile(RequestCsvPath);
+            //Statistics.registerFilter(new RequestCsvOutputFilter());
         }
 
         //Whether to gengerate Html
@@ -304,9 +302,11 @@ public class Env {
         closeFile();
     }
 
+    /*
     private static void setRequestCsvPath(String path) {
         RequestCsvPath = path + "_Request.csv";
     }
+     */
 
     private static void setHtmlCsvPath(String path) {
         HtmlCsvPath = path + "_Result.csv";
@@ -364,5 +364,13 @@ public class Env {
             HtmlReport.generateHtml(HtmlCsvPath, htmlFilePath);
             logger.info("Generating html File");
         }
+    }
+
+    public static String getHost() {
+        return host;
+    }
+
+    public static void setHost(String host) {
+        Env.host = host;
     }
 }

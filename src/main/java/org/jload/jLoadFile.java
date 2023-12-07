@@ -26,10 +26,6 @@ class MyUser extends User {
         getClient("http://0.0.0.0:5000").path("/First").get();
     }
 
-    @Task(tag = "V1")
-    void getMethod2() {
-        getClient().path("/First").get();
-    }
 
     /*
     @Task(tag = "V2")

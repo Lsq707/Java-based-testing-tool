@@ -19,7 +19,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /*
 The strategy to run the testing
@@ -30,19 +29,27 @@ public class Runner {
     private static int testingTime;
     private static int spawnRate;
     private static int userNum;
-    public static Set<Class<?>> definedUsers;
+    private static Set<Class<?>> definedUsers;
     private static ConcurrentHashMap<String, List<User>> activeUsers;
-    public static ScheduledExecutorService scheduledExecutorService;
-    public static ScheduledFuture<?> runnableFuture;
-    public static ScheduledExecutorService scheduledLogService;
-    public static ScheduledFuture<?> logFuture;
-    public static int loop;
+    private static ScheduledExecutorService scheduledExecutorService;
+    private static ScheduledFuture<?> runnableFuture;
+    private static int loop;
     private static AtomicBoolean testFlag = new AtomicBoolean(true);
-    ;
     private static final ExecutorService userExecutor = Executors.newVirtualThreadPerTaskExecutor();
+
+    /*
+    private static final ExecutorService userExecutor = Executors.newThreadPerTaskExecutor(new ThreadFactory() {
+        private int count = 0;
+        @Override
+        public Thread newThread(Runnable r) {
+            return new Thread(r, "UserThread-" + count++);
+        }
+    });
+
+     */
     private static Set<String> assignedThread;
-    private static long testDuration = 0;
-    final Object lock = new Object(); //For interrupt timing if the shape returns null
+    private static long testDuration = 0; //seconds
+    static final Object lock = new Object(); //For interrupt timing if the shape returns null
 
     //Usable in pkg
     Runner(int loopTime, int userNum, int spawnRate, int testingTime) {
@@ -66,7 +73,7 @@ public class Runner {
             constructor.setAccessible(true);
             userInstance = (User) constructor.newInstance();
 
-            if (userInstance.getUserParamHost().isBlank() && Env.host != null) {
+            if (userInstance.getUserParamHost().isBlank() && Env.getHost() != null) {
                 setHost(userInstance);
             }
 
@@ -78,7 +85,7 @@ public class Runner {
     }
 
     private void setHost(User userInstance) {
-        userInstance.setUserParamHost(Env.host);
+        userInstance.setUserParamHost(Env.getHost());
     }
 
     /*
@@ -127,7 +134,6 @@ public class Runner {
                 if (!testFlag.get()) {
                     break;
                 }
-                printInfo();
             }
         }
 
@@ -135,10 +141,9 @@ public class Runner {
         shutdownThreads(scheduledExecutorService);
         // Stop the test
         endTesting();
-        printInfo(); //There are unrecorded request while waiting for the thread shut down
     }
 
-    private void setTestFlag(boolean value) {
+    public static void setTestFlag(boolean value) {
         synchronized (lock) {
             testFlag.set(value);
             lock.notifyAll(); //Interrupt the sleep when the shape return null
@@ -146,18 +151,18 @@ public class Runner {
         logger.debug("Set the testing flag to {}", testFlag.get());
     }
 
-    private void printInfo() {
-        long responseNum = CheckRatioFilter.responseNum.get();
+        public static String printInfo() {
+
+        long responseNum = CheckRatioFilter.totalResponseNum.get();
         long failNum = CheckRatioFilter.failNum.get();
-        long totalResponseTime = CheckRatioFilter.totalResponseTime.get();
-        double rps = testDuration > 0 ? (double) responseNum / testDuration : 0;
-        double avgResponseTime = responseNum > 0 ? (double) totalResponseTime / responseNum : 0;
-        double failRatio = responseNum > 0 ? (double) failNum / responseNum : 0;
+        double rps = CheckRatioFilter.responseNum.get();;
+        double avgResponseTime = (double) CheckRatioFilter.totalResponseTime.get() / responseNum;
+        double failRatio = (double) failNum / responseNum;
 
         String message = String.format("Requests: %d Fails: %d RPS: %s AvgResponseTime: %s FailRatio: %s",
-                responseNum, failNum, Env.df.format(rps * 1000), Env.df.format(avgResponseTime), Env.df.format(failRatio));
+                responseNum, failNum, rps, Env.df.format(avgResponseTime), Env.df.format(failRatio));
 
-        logger.info(message);
+        return message;
     }
 
     /*
@@ -279,13 +284,15 @@ public class Runner {
 
         //Execute until all the tasks are finished
         while (!activeUsers.isEmpty()) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+            synchronized (lock) {
+                try {
+                    lock.wait(1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
-        shutdownAllUsers();
+        endTesting();
     }
 
     /*
@@ -311,7 +318,7 @@ public class Runner {
             runnableFuture.cancel(true);
             shutdownThreads(scheduledExecutorService);
         }
-        shutdownAllUsers();
+        endTesting();
     }
 
     /*
@@ -333,11 +340,15 @@ public class Runner {
     /*
     The process of ending test for shape control testing
      */
-    private void endTesting() {
+    private static void endTesting() {
 
         // Shutdown all user
         shutdownAllUsers();
-        logger.info("The testing END");
+        if(CheckRatioFilter.getScheduledCheckService() != null){
+            CheckRatioFilter.getCheckingFuture().cancel(true);
+            shutdownThreads(CheckRatioFilter.getScheduledCheckService());
+        }
+        logger.info("Testing Ends: {}",printInfo()); //There are unrecorded request while waiting for the thread shut down
     }
 
     /*
@@ -380,5 +391,9 @@ public class Runner {
 
     public static long getTestDuration() {
         return testDuration;
+    }
+
+    public static int getLoop(){
+        return loop;
     }
 }

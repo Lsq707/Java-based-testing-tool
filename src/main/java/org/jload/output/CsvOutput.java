@@ -1,6 +1,5 @@
 package org.jload.output;
 
-import org.jload.model.RequestOutput;
 import org.jload.model.ResponseStat;
 import org.jload.model.JMeterOutput;
 import org.slf4j.Logger;
@@ -19,9 +18,9 @@ public class CsvOutput {
     private static final Logger logger = LoggerFactory.getLogger(CsvOutput.class);
     //private static final String HTML_CSV_HEADERS = "timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,Latency,IdleTime,Connect\n";
     private static final String HTML_CSV_HEADERS = "timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,IdleTime,Connect\n";
-    private static final String REQUEST_CSV_HEADERS = "Type,Name,Request Count,Failure Count,Median Response Time,Average Response Time,Min Response Time,Max Response Time,Average Content Size,Requests/s,Failures/s,50%,66%,75%,80%,90%,95%,98%,99%,99.9%,99.99%,100%\n";
+    //private static final String REQUEST_CSV_HEADERS = "Type,Name,Request Count,Failure Count,Median Response Time,Average Response Time,Min Response Time,Max Response Time,Average Content Size,Requests/s,Failures/s,50%,66%,75%,80%,90%,95%,98%,99%,99.9%,99.99%,100%\n";
     private static FileWriter HtmlCsvWriter;
-    private static FileWriter RequestCsvWriter;
+    //private static FileWriter RequestCsvWriter;
     private static BlockingQueue<ResponseStat> responseQueue;
     private static Thread HtmlCsvThread;
     private static boolean finished = false;
@@ -62,6 +61,7 @@ public class CsvOutput {
         }
     }
 
+    /*
     public static void createRequestCsvFile(String filePath) throws IOException {
         RequestCsvWriter = new FileWriter(filePath);
         try {
@@ -71,6 +71,8 @@ public class CsvOutput {
             logger.error("Error in CsvOutput: {}", e.getMessage(), e);
         }
     }
+
+     */
 
     public static void writeToHtmlCsv(ResponseStat responseStat) {
         if (HtmlCsvWriter != null) {
@@ -98,12 +100,15 @@ public class CsvOutput {
                 HtmlCsvThread.join();
                 HtmlCsvWriter.close();
             }
+            /*
             if (RequestCsvWriter != null) {
                 for (RequestOutput requestOutput : RequestCsvOutputFilter.requestOutputs.values()) {
                     RequestCsvWriter.append(requestOutput.toString());
                 }
                 RequestCsvWriter.close();
             }
+
+             */
         } catch (IOException e) {
             logger.error("Error in CsvOutput: {}", e.getMessage(), e);
         } catch (InterruptedException e) {

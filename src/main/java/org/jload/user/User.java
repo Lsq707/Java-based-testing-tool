@@ -106,7 +106,6 @@ public class User implements Runnable {
     private void setTaskSet() {
         Method[] declaredMethods = this.getClass().getDeclaredMethods();
         List<Method> userTasks = new ArrayList<>(List.of(declaredMethods));
-
         taskSet = new TaskSet(this, userTasks);
     }
 

@@ -36,9 +36,6 @@ public class ResponseTimeFilter implements ClientResponseFilter {
 
         long endTime = System.currentTimeMillis();
         long responseTime = calculateResponseTime(startTime, endTime);
-        logger.trace("Response time: " + responseTime + " milliseconds");
-
-        //String label = "Http Request " + requestContext.getMethod();
 
         String host = requestContext.getUri().toString();
         String label = (rewrittenPath == null ? host : rewrittenPath) + " " + requestContext.getMethod();
@@ -61,6 +58,7 @@ public class ResponseTimeFilter implements ClientResponseFilter {
         //logger.info(responseContext.toString());
         String threadInfo = Thread.currentThread().toString();
         String workerName = threadInfo.split("@")[1];
+        //String workerName = "test";
         Runner.addPlatformThread(workerName);
         Statistics.addStatistic(new ResponseStat(timeStamp, responseTime, label, String.valueOf(responseCode), statusInfo, responseMsg, dataType, success, failureMsg, bytesSent, bytesReceived, host, rewrittenPath));
     }

@@ -116,7 +116,7 @@ public class TaskSet {
             Thread.sleep(waitTime.getWaitTime());
             //If defined loop times the tasks will only do once and then dispose the user
             loopTime += 1;
-            if (Runner.loop != 0 && loopTime > Runner.loop) {
+            if (Runner.getLoop() != 0 && loopTime > Runner.getLoop()) {
                 Runner.disposeUser(user);
             }
         }
