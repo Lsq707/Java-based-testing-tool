@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+  <Properties>
+    <Property name="log.pattern">%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n</Property>
+  </Properties>
+  <Appenders>
+    <!-- to console -->
+    <Console name="console" target="SYSTEM_OUT">
+      <PatternLayout pattern="${log.pattern}" />
+    </Console>
+    <!-- to file -->
+    <File name="logFile" fileName="logs/jload.log" append="false">
+      <PatternLayout pattern="${log.pattern}" />
+    </File>
+
+  </Appenders>
+  <Loggers>
+    <Root level="debug">
+      <!-- info level -->
+      <AppenderRef ref="console" level="info" />
+      <!-- debug level -->
+      <AppenderRef ref="logFile" level="debug" />
+    </Root>
+  </Loggers>
+</Configuration>

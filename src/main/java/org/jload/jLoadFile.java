@@ -6,10 +6,12 @@ import org.jload.model.ShapeTuple;
 import org.jload.runner.Env;
 
 import org.jload.runner.LoadTestShape;
+import org.jload.runner.Runner;
 import org.jload.tasks.Task;
 import org.jload.user.User;
 import org.jload.user.UserParam;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -19,15 +21,22 @@ import java.util.List;
 )
 class MyUser extends User {
 
-    @Task
+    @Task(tag = "V1")
     void getMethod() {
         getClient("http://0.0.0.0:5000").path("/First").get();
     }
 
-    @Task
+    @Task(tag = "V1")
     void getMethod2() {
         getClient().path("/First").get();
     }
+
+    /*
+    @Task(tag = "V2")
+    void testTag() {
+        System.out.println("V2");
+    }
+
 
     /*
     @Task
@@ -38,7 +47,6 @@ class MyUser extends User {
 
      */
 }
-
 
 @UserParam(
         host = "http://0.0.0.0:5000",
@@ -51,6 +59,7 @@ class MyUser2 extends User {
         //Env.putVariable("test","test");
         getClient().path("/Second").get();
     }
+
     @Task(weight = 0)
         //Will not execute
     void test() {
@@ -60,15 +69,39 @@ class MyUser2 extends User {
 
 
 
-
 /*
+
 class CustomShape extends LoadTestShape {
 
     @Override
     public List<ShapeTuple> tick() {
-        return List.of(new ShapeTuple("MyUser", 2, 1));
+        if (getRunTime() < 4) {
+            return List.of(new ShapeTuple("MyUser", 2, 1));
+        }
+        if (getRunTime() < 7) {
+            return List.of(new ShapeTuple("MyUser", 0, 1));
+        }
+        return null;
+    }
+
+}
+
+
+class CustomShape2 extends LoadTestShape {
+
+    @Override
+    public List<ShapeTuple> tick() {
+        if (getRunTime() < 3) {
+            return List.of(new ShapeTuple("MyUser", 2, 1));
+        }
+        return  null;
     }
 
 }
 
  */
+
+
+
+
+

@@ -1,18 +1,14 @@
 package org.jload.user;
 
 import org.jload.client.UserClient;
-import org.jload.runner.Runner;
-import org.jload.tasks.Task;
+import org.jload.exceptions.TaskException;
 import org.jload.tasks.TaskSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -94,27 +90,22 @@ public class User implements Runnable {
     //Execute tasks
     @Override
     public void run() {
+        //Assign virtual threads to each tasks in the user
+        logger.debug("User Running: {}", this.getClass().getName());
+        threadInfo = Thread.currentThread().toString();
+        //Runner.runUsers(this);
         try {
-
-            //Assign virtual threads to each tasks in the user
-            logger.info("User Running: {}", this.getClass().getName());
-            threadInfo = Thread.currentThread().toString();
-            //Runner.runUsers(this);
             taskSet.startTesting();
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | TaskException e) {
+            logger.error("User {} got error {}", this.getClass().getName(), e.getMessage(), e);
             throw new RuntimeException(e);
         }
+        logger.debug("User Ended: {}", this.getClass().getName());
     }
 
     private void setTaskSet() {
         Method[] declaredMethods = this.getClass().getDeclaredMethods();
-        List<Method> userTasks = new ArrayList<>();
-
-        for (Method method : declaredMethods) {
-            if (method.isAnnotationPresent(Task.class)) {
-                userTasks.add(method);
-            }
-        }
+        List<Method> userTasks = new ArrayList<>(List.of(declaredMethods));
 
         taskSet = new TaskSet(this, userTasks);
     }
