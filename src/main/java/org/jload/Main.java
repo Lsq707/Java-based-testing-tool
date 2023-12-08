@@ -12,7 +12,6 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-
         Env.shutdownHook();
 
         // Create the command line parser
@@ -31,7 +30,7 @@ public class Main {
             }
             if (cmd.hasOption("userCount")) {
                 String[] userCounts = cmd.getOptionValues("uc");
-                for(String uc:userCounts){
+                for (String uc : userCounts) {
                     envBuilder.setUserCount(uc);
                 }
             }
@@ -90,14 +89,13 @@ public class Main {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             logger.info("Thread was interrupted, Failed to complete operation");
-            logger.debug("Error in main: {}",e.getMessage(), e);
+            logger.debug("Error in main: {}", e.getMessage(), e);
         } catch (ParseException e) {
             logger.info(e.getMessage());
             // Automatically generate the help statement
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("commandline", options);
         }
-
     }
 
     private static Options getOptions() {
@@ -114,10 +112,9 @@ public class Main {
         options.addOption("csv", "csvLocation", true, "Directory path for storing CSV files");
         options.addOption("html", "htmlLocation", true, "Directory path for storing HTML report files.");
         options.addOption("check_failRatio", "failRatioCheck", true, "Check fail Ratio per seconds");
-        options.addOption("check_avgResponseTime", "responseTimeCheck", true,"Check avg response time per seconds");
-        options.addOption("shape", "customizedShape", true,"Specify the customShape when there are more than 1 customized shape defined");
+        options.addOption("check_avgResponseTime", "responseTimeCheck", true, "Check avg response time per seconds");
+        options.addOption("shape", "customizedShape", true, "Specify the customShape when there are more than 1 customized shape defined");
 
         return options;
-
     }
 }
