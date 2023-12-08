@@ -67,6 +67,7 @@ public class UserClient {
         // When there has no cache
         return client.target(host).path(path);
     }
+
     private Invocation.Builder createRequestBuilder(WebTarget webTarget) {
         long startTime = System.currentTimeMillis();
         String timeStamp = getTimeStamp();

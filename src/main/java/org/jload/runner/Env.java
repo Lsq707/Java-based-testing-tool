@@ -283,7 +283,6 @@ public class Env {
         //Whether to add ratio check
         Statistics.registerFilter(new CheckRatioFilter());
 
-
         //Whether to gengerate Html
         if (htmlFilePath != null && builder.getCsvFileName() != null) {
             setHtmlCsvPath(builder.getCsvFileName());

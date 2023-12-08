@@ -111,7 +111,7 @@ public class Runner {
             while (!isFirstRequestSent.get() && testFlag.get()) {
                 // Waiting for the first request
             }
-            logger.debug("Testing start Time: {}",System.currentTimeMillis());
+            logger.debug("Testing start Time: {}", System.currentTimeMillis());
             synchronized (lock) {
                 try {
                     lock.wait(duration);
@@ -119,7 +119,7 @@ public class Runner {
                     throw new RuntimeException(e);
                 }
             }
-            logger.info("Timing thread: TIME UP");
+            logger.debug("Timing thread: TIME UP");
         });
     }
 
@@ -331,7 +331,7 @@ public class Runner {
     The process of ending test for shape control testing
      */
     private static void endTesting() {
-        logger.info("Executing endTesting");
+        logger.debug("Executing endTesting");
         if (scheduledExecutorService != null) {
             runnableFuture.cancel(true);
             shutdownThreads(scheduledExecutorService);
@@ -385,7 +385,6 @@ public class Runner {
     public static ConcurrentHashMap<String, List<User>> getActiveUsers() {
         return activeUsers;
     }
-
 
     public static int getLoop() {
         return loop;
