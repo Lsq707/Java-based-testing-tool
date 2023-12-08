@@ -91,11 +91,16 @@ public class Main {
             Thread.currentThread().interrupt();
             logger.info("Thread was interrupted, Failed to complete operation");
             logger.debug("Error in main: {}",e.getMessage(), e);
+            System.exit(1);
         } catch (ParseException e) {
             logger.info(e.getMessage());
             // Automatically generate the help statement
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("commandline", options);
+            System.exit(1);
+        }catch (Exception e){
+            logger.info(e.getMessage());
+            System.exit(1);
         }
 
     }

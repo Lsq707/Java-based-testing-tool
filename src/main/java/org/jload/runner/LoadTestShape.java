@@ -4,7 +4,6 @@ import org.jload.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public abstract class LoadTestShape {
@@ -13,14 +12,14 @@ public abstract class LoadTestShape {
     protected int testing_time = Integer.MAX_VALUE;
 
     protected LoadTestShape() {
-        start_time = System.nanoTime();
+        start_time = System.currentTimeMillis();
     }
 
     /*
     Return the executeTime
      */
     protected long getRunTime() {
-        long duration = Runner.getTestDuration();
+        long duration = (System.currentTimeMillis() - start_time) / 1000;
         logger.debug("Get the duration in LoadTestShape: {}", duration);
         return duration;
     }
@@ -29,8 +28,4 @@ public abstract class LoadTestShape {
     The customized testing strategy
      */
     public abstract List<ShapeTuple> tick();
-
-    public long getStartTime() {
-        return start_time;
-    }
 }

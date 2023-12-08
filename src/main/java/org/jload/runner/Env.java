@@ -1,7 +1,10 @@
 package org.jload.runner;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.appender.AbstractOutputStreamAppender;
 import org.jload.exceptions.ShapeException;
-import org.jload.model.ResponseStat;
 import org.jload.model.ShapeTuple;
 import org.jload.output.CheckRatioFilter;
 import org.jload.output.CsvOutput;
@@ -125,7 +128,7 @@ public class Env {
 
     public static LoadTestShape defaultShape() throws ShapeException {
         logger.info("Using defaultShape");
-        int testingTime = Runner.getTestingTime();
+        int testingTime = Runner.getDuration();
         int computeUserCount = Runner.getUserNum();
         int spawnRate = Runner.getSpawnRate();
         int userCount = Runner.getUserNum();
@@ -280,13 +283,6 @@ public class Env {
         //Whether to add ratio check
         Statistics.registerFilter(new CheckRatioFilter());
 
-        //Whether generate CSV result
-
-        if (builder.getCsvFileName() != null) {
-            //setRequestCsvPath(builder.getCsvFileName());
-            //CsvOutput.createRequestCsvFile(RequestCsvPath);
-            //Statistics.registerFilter(new RequestCsvOutputFilter());
-        }
 
         //Whether to gengerate Html
         if (htmlFilePath != null && builder.getCsvFileName() != null) {

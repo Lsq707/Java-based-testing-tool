@@ -2,6 +2,7 @@ package org.jload.user;
 
 import org.jload.client.UserClient;
 import org.jload.exceptions.TaskException;
+import org.jload.runner.Runner;
 import org.jload.tasks.TaskSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,6 +96,8 @@ public class User implements Runnable {
         threadInfo = Thread.currentThread().toString();
         //Runner.runUsers(this);
         try {
+            //Mark the fist start
+            Runner.getIsFirstRequestSent().compareAndSet(false, true);
             taskSet.startTesting();
         } catch (InterruptedException | TaskException e) {
             logger.error("User {} got error {}", this.getClass().getName(), e.getMessage(), e);

@@ -16,14 +16,13 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 @UserParam(
-        host = "http://0.0.0.0:5000",
         waitTime = "constant(0)"
 )
 class MyUser extends User {
 
-    @Task(tag = "V1")
+    @Task
     void getMethod() {
-        getClient("http://0.0.0.0:5000").path("/First").get();
+        getClient("http://0.0.0.0:5000").path("/").get();
     }
 
 
@@ -44,6 +43,7 @@ class MyUser extends User {
      */
 }
 
+/*
 @UserParam(
         host = "http://0.0.0.0:5000",
         waitTime = "constant(0)"
@@ -62,6 +62,8 @@ class MyUser2 extends User {
         System.out.println("VariableTest: " + Env.getVariable("test"));
     }
 }
+
+ */
 
 
 
@@ -82,7 +84,9 @@ class CustomShape extends LoadTestShape {
 
 }
 
+ */
 
+/*
 class CustomShape2 extends LoadTestShape {
 
     @Override
@@ -96,6 +100,8 @@ class CustomShape2 extends LoadTestShape {
 }
 
  */
+
+
 
 
 

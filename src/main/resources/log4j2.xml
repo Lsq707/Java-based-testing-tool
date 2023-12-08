@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration>
+<Configuration shutdownHook="disable">
   <Properties>
     <Property name="log.pattern">%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n</Property>
     <Property name="console.pattern">%d{yyyy-MM-dd HH:mm:ss} %logger{36} - %msg%n</Property>
@@ -11,9 +11,14 @@
       <PatternLayout pattern="${console.pattern}" />
     </Console>
     <!-- to file -->
-    <File name="logFile" fileName="logs/jload.log" append="false">
-      <PatternLayout pattern="${log.pattern}" />
-    </File>
+    <RollingFile name="logFile" fileName="logs/jload.log" filePattern="logs/jload-%d{yyyy-MM-dd-HH-mm-ss}.log">
+      <PatternLayout>
+        <Pattern>${log.pattern}</Pattern>
+      </PatternLayout>
+      <Policies>
+        <TimeBasedTriggeringPolicy />
+      </Policies>
+    </RollingFile>
 
   </Appenders>
   <Loggers>

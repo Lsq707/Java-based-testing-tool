@@ -111,7 +111,7 @@ public class TaskSet {
                 task.invoke(user);
             } catch (Exception e) {
                 logger.debug("Error in user- {} : task- {} : error: {}", user.getClass().getName(), task.getName(), e.getMessage(), e);
-                throw new TaskException("Error when executing the " + user.getClass().getName() + "-" + task.getName());
+                throw new TaskException("Error when executing the " + user.getClass().getName() + "-" + task.getName() + "Please check if the server open");
             }
             Thread.sleep(waitTime.getWaitTime());
             //If defined loop times the tasks will only do once and then dispose the user

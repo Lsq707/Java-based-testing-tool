@@ -1,5 +1,7 @@
 package org.jload.runner;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
 import org.jload.model.ShapeTuple;
 import org.jload.output.CheckRatioFilter;
 import org.jload.user.User;
@@ -26,7 +28,7 @@ The strategy to run the testing
 public class Runner {
     private static final Logger logger = LoggerFactory.getLogger(Runner.class);
     private static int timeOut;
-    private static int testingTime;
+    private static int duration;
     private static int spawnRate;
     private static int userNum;
     private static Set<Class<?>> definedUsers;
@@ -36,8 +38,11 @@ public class Runner {
     private static int loop;
     private static AtomicBoolean testFlag = new AtomicBoolean(true);
     private static final ExecutorService userExecutor = Executors.newVirtualThreadPerTaskExecutor();
+    private static AtomicBoolean isFirstRequestSent = new AtomicBoolean(false);
+    private Thread timingThread;
 
     /*
+    //FOR TEST
     private static final ExecutorService userExecutor = Executors.newThreadPerTaskExecutor(new ThreadFactory() {
         private int count = 0;
         @Override
@@ -48,14 +53,13 @@ public class Runner {
 
      */
     private static Set<String> assignedThread;
-    private static long testDuration = 0; //seconds
     static final Object lock = new Object(); //For interrupt timing if the shape returns null
 
     //Usable in pkg
-    Runner(int loopTime, int userNum, int spawnRate, int testingTime) {
+    Runner(int loopTime, int userNum, int spawnRate, int duration) {
         definedUsers = Env.getUsers();
         loop = loopTime;
-        Runner.testingTime = testingTime * 1000;
+        Runner.duration = duration * 1000;
         Runner.spawnRate = spawnRate;
         Runner.userNum = userNum;
         timeOut = Integer.MAX_VALUE;
@@ -93,9 +97,30 @@ public class Runner {
     * loop times
     * Shape (add or dispose users at different time)
     */
-    public void run() {
+    public void run() throws InterruptedException {
+        timingTest();
         Runnable runExecution = loop == 0 ? this::executeInShapeControl : this::executeInLoop;
         runExecution.run();
+        //Wait for the timing
+        timingThread.join();
+        endTesting();
+    }
+
+    private void timingTest() {
+        timingThread = Thread.startVirtualThread(() -> {
+            while (!isFirstRequestSent.get() && testFlag.get()) {
+                // Waiting for the first request
+            }
+            logger.debug("Testing start Time: {}",System.currentTimeMillis());
+            synchronized (lock) {
+                try {
+                    lock.wait(duration);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            logger.info("Timing thread: TIME UP");
+        });
     }
 
     /*
@@ -107,40 +132,19 @@ public class Runner {
         LoadTestShape loadTestShape = Env.initShape();
         runnableFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
-                if (testDuration++ >= testingTime / 1000) {
-                    setTestFlag(false);   //End the testing
+                logger.debug("Active Users: {}", printOutActiveUsr());
+                List<ShapeTuple> shapeTuples = loadTestShape.tick();
+                if (shapeTuples == null) {
+                    logger.debug("shapeTuples returns null");
+                    setTestFlag(false);
                 } else {
-                    logger.debug("Active Users: {}", printOutActiveUsr());
-                    List<ShapeTuple> shapeTuples = loadTestShape.tick();
-                    if (shapeTuples == null) {
-                        setTestFlag(false);
-                    } else {
-                        adjustUser(shapeTuples);
-                    }
+                    adjustUser(shapeTuples);
                 }
             } catch (Exception e) {
                 logger.error("Error in Runner {}", e.getMessage(), e);
                 throw new RuntimeException("Testing stopped due to an error: " + e.getMessage(), e);
             }
         }, 0, 1, TimeUnit.SECONDS);
-        // Run for the scheduled time or schedule strategy
-        while (testFlag.get()) {
-            synchronized (lock) {
-                try {
-                    lock.wait(1000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-                if (!testFlag.get()) {
-                    break;
-                }
-            }
-        }
-
-        runnableFuture.cancel(true);
-        shutdownThreads(scheduledExecutorService);
-        // Stop the test
-        endTesting();
     }
 
     public static void setTestFlag(boolean value) {
@@ -151,26 +155,11 @@ public class Runner {
         logger.debug("Set the testing flag to {}", testFlag.get());
     }
 
-        public static String printInfo() {
-
-        long responseNum = CheckRatioFilter.totalResponseNum.get();
-        long failNum = CheckRatioFilter.failNum.get();
-        double rps = CheckRatioFilter.responseNum.get();;
-        double avgResponseTime = (double) CheckRatioFilter.totalResponseTime.get() / responseNum;
-        double failRatio = (double) failNum / responseNum;
-
-        String message = String.format("Requests: %d Fails: %d RPS: %s AvgResponseTime: %s FailRatio: %s",
-                responseNum, failNum, rps, Env.df.format(avgResponseTime), Env.df.format(failRatio));
-
-        return message;
-    }
-
     /*
-    FOR TEST
+    Active user count for each user class
     */
     private List<String> printOutActiveUsr() {
         List<String> info = new ArrayList<>();
-        info.add("Test Duration: " + testDuration);
         for (Map.Entry<String, List<User>> entry : activeUsers.entrySet()) {
             info.add(entry.getKey() + " currentRunning: " + String.valueOf(entry.getValue().size()));
         }
@@ -292,7 +281,7 @@ public class Runner {
                 }
             }
         }
-        endTesting();
+        setTestFlag(false);
     }
 
     /*
@@ -314,6 +303,7 @@ public class Runner {
     Stop all the running mission
      */
     static void shutdownHook() {
+        logger.info("Shutting Down");
         if (runnableFuture != null) {
             runnableFuture.cancel(true);
             shutdownThreads(scheduledExecutorService);
@@ -341,21 +331,28 @@ public class Runner {
     The process of ending test for shape control testing
      */
     private static void endTesting() {
+        logger.info("Executing endTesting");
+        if (scheduledExecutorService != null) {
+            runnableFuture.cancel(true);
+            shutdownThreads(scheduledExecutorService);
+        }
 
         // Shutdown all user
         shutdownAllUsers();
-        if(CheckRatioFilter.getScheduledCheckService() != null){
-            CheckRatioFilter.getCheckingFuture().cancel(true);
-            shutdownThreads(CheckRatioFilter.getScheduledCheckService());
-        }
-        logger.info("Testing Ends: {}",printInfo()); //There are unrecorded request while waiting for the thread shut down
+
+        CheckRatioFilter.getCheckingFuture().cancel(true);
+        shutdownThreads(CheckRatioFilter.getScheduledCheckService());
+        CheckRatioFilter.cleanDataMap();
+
+        LoggerContext context = (LoggerContext) LogManager.getContext(false);
+        context.close();
     }
 
     /*
     Pass the related parameter to Env for the default testing strategy
     */
-    public static int getTestingTime() {
-        return testingTime;
+    public static int getDuration() {
+        return duration;
     }
 
     public static int getSpawnRate() {
@@ -389,11 +386,12 @@ public class Runner {
         return activeUsers;
     }
 
-    public static long getTestDuration() {
-        return testDuration;
+
+    public static int getLoop() {
+        return loop;
     }
 
-    public static int getLoop(){
-        return loop;
+    public static AtomicBoolean getIsFirstRequestSent() {
+        return isFirstRequestSent;
     }
 }
