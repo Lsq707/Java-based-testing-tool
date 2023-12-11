@@ -36,9 +36,9 @@ public class Runner {
     private static ScheduledExecutorService scheduledExecutorService;
     private static ScheduledFuture<?> runnableFuture;
     private static int loop;
-    private static AtomicBoolean testFlag = new AtomicBoolean(true);
+    private static final AtomicBoolean testFlag = new AtomicBoolean(true);
     private static final ExecutorService userExecutor = Executors.newVirtualThreadPerTaskExecutor();
-    private static AtomicBoolean isFirstRequestSent = new AtomicBoolean(false);
+    private static final AtomicBoolean isFirstRequestSent = new AtomicBoolean(false);
     private Thread timingThread;
 
     /*
@@ -138,13 +138,7 @@ public class Runner {
                     logger.debug("shapeTuples returns null");
                     setTestFlag(false);
                 } else {
-                    logger.debug("Active Users: {}", printOutActiveUsr());
-                    List<ShapeTuple> shapeTuples = loadTestShape.tick();
-                    if (shapeTuples == null) {
-                        setTestFlag(false);
-                    } else {
-                        adjustUser(shapeTuples);
-                    }
+                    adjustUser(shapeTuples);
                 }
             } catch (Exception e) {
                 logger.error("Error in Runner {}", e.getMessage(), e);
@@ -395,7 +389,7 @@ public class Runner {
     public static ConcurrentHashMap<String, List<User>> getActiveUsers() {
         return activeUsers;
     }
-    
+
     public static int getLoop() {
         return loop;
     }
