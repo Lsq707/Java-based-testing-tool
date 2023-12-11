@@ -20,12 +20,12 @@ import java.util.List;
 )
 class MyUser extends User {
 
-    @Task
+    @Task(tag = "V1")
     void getMethod() {
         getClient("http://0.0.0.0:5000").path("/v1", "http://0.0.0.0:5000").get();
     }
 
-    @Task
+    @Task(tag = "V1")
     void getMethod2() {
         getClient("http://0.0.0.0:5000").path("/v2", "http://0.0.0.0:5000").get();
     }
@@ -80,10 +80,3 @@ class CustomShape2 extends LoadTestShape {
 }
 
  */
-
-
-
-
-
-
-

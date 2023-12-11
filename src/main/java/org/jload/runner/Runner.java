@@ -138,7 +138,13 @@ public class Runner {
                     logger.debug("shapeTuples returns null");
                     setTestFlag(false);
                 } else {
-                    adjustUser(shapeTuples);
+                    logger.debug("Active Users: {}", printOutActiveUsr());
+                    List<ShapeTuple> shapeTuples = loadTestShape.tick();
+                    if (shapeTuples == null) {
+                        setTestFlag(false);
+                    } else {
+                        adjustUser(shapeTuples);
+                    }
                 }
             } catch (Exception e) {
                 logger.error("Error in Runner {}", e.getMessage(), e);
@@ -389,7 +395,7 @@ public class Runner {
     public static ConcurrentHashMap<String, List<User>> getActiveUsers() {
         return activeUsers;
     }
-
+    
     public static int getLoop() {
         return loop;
     }

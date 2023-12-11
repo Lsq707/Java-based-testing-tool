@@ -1,10 +1,15 @@
 package org.jload.runner;
 
+<<<<<<< HEAD
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.appender.AbstractOutputStreamAppender;
 import org.jload.exceptions.ShapeException;
+=======
+import org.jload.exceptions.ShapeException;
+import org.jload.model.ResponseStat;
+>>>>>>> main
 import org.jload.model.ShapeTuple;
 import org.jload.output.CheckRatioFilter;
 import org.jload.output.CsvOutput;
