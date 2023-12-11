@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class groupedRequests {
-    private String label;
+    private final String label;
     private long totalRequestNum;
     private long totalFailNum;
     private long totalRequestTime;
@@ -21,7 +21,7 @@ public class groupedRequests {
         perSecondStats = new CopyOnWriteArrayList<>();
     }
 
-    public void addResquestNum() {
+    public void addRequestNumb() {
         totalRequestNum++;
     }
 
@@ -40,7 +40,7 @@ public class groupedRequests {
     public void addSecondStat(ResponseStat responseStat) {
         long time = responseStat.elapsed();
         addRequestTime(time);
-        addResquestNum();
+        addRequestNumb();
         long currentSeconds = convertToSeconds(responseStat.timeStamp());
         PerSecondStat perSecondStat = getOrCreateStatWithLabel(currentSeconds);
         perSecondStat.addRequest();
@@ -80,7 +80,7 @@ public class groupedRequests {
         return null;
     }
 
-    public String getLable() {
+    public String getLabel() {
         return label;
     }
 

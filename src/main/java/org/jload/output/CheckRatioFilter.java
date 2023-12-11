@@ -71,7 +71,7 @@ public class CheckRatioFilter implements StatisticsFilter {
     public static void printInfo(long previousSeconds, groupedRequests groupedRequests) {
         PerSecondStat perSecondStat = groupedRequests.getTimeStat(previousSeconds);
         System.out.printf("%-60s | %7d | %7d(%3.2f%%) | %7.2f | %8d | %11d | %7.2f\n",
-                groupedRequests.getLable(), groupedRequests.getTotalRequestNum(), groupedRequests.getTotalFailNum(), groupedRequests.getFailRatio(),
+                groupedRequests.getLabel(), groupedRequests.getTotalRequestNum(), groupedRequests.getTotalFailNum(), groupedRequests.getFailRatio(),
                 groupedRequests.getAvgResponseTime(), perSecondStat.getRps(), perSecondStat.getFailNum(), perSecondStat.getAvgResponseTime());
         try {
             if (Env.checkFailRatio > 0) {
