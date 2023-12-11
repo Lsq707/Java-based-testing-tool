@@ -44,13 +44,11 @@ public class User implements Runnable {
 
     public UserClient getClient() {
         userClient.setHost(getUserParamHost());
-        //System.out.println("User1: " + userClient.getHost());
         return userClient;
     }
 
     public UserClient getClient(String host) {
         userClient.setHost(host);
-        //System.out.println("User2: " + userClient.getHost());
         return userClient;
     }
 

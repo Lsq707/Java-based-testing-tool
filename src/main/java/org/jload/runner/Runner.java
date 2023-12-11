@@ -266,8 +266,12 @@ public class Runner {
     Each user and their tasks will execute once only then end the testing
     */
     private void executeInLoop() {
-        //For user to store the variables that able to be used by other method
         for (Class<?> user : definedUsers) {
+            if (Env.chooseUser) {
+                if (Env.chosenUsers.get(getClsName(user)) == null) {
+                    continue;
+                }
+            }
             addUser(getClsName(user));
         }
 
@@ -342,7 +346,7 @@ public class Runner {
 
         CheckRatioFilter.getCheckingFuture().cancel(true);
         shutdownThreads(CheckRatioFilter.getScheduledCheckService());
-        CheckRatioFilter.cleanDataMap();
+        CheckRatioFilter.printAll();
 
         LoggerContext context = (LoggerContext) LogManager.getContext(false);
         context.close();

@@ -3,11 +3,10 @@ package org.jload.model;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class CollectRequests {
+public class groupedRequests {
     private String label;
     private long totalRequestNum;
     private long totalFailNum;
@@ -17,7 +16,7 @@ public class CollectRequests {
     //Data seconds
     private final List<PerSecondStat> perSecondStats;
 
-    public CollectRequests(String label) {
+    public groupedRequests(String label) {
         this.label = label;
         perSecondStats = new CopyOnWriteArrayList<>();
     }
@@ -101,29 +100,18 @@ public class CollectRequests {
     }
 
     public double getFailRatio() {
-        return (double) totalFailNum / totalRequestNum;
+        return ((double) totalFailNum / totalRequestNum) * 100;
     }
 
     public void removeTimeStat(long time) {
-        for (PerSecondStat stat : perSecondStats) {
-            if (stat.getSecond() == time) {
-                perSecondStats.remove(stat);
-            }
-        }
+        perSecondStats.removeIf(stat -> stat.getSecond() == time);
     }
 
     public List<PerSecondStat> getPerSecondStats() {
         return perSecondStats;
     }
 
-    public boolean allPrint() {
-        return getPerSecondStats().isEmpty();
-    }
-
-    public long getTheEarliestRecordExist() {
-        if (perSecondStats.isEmpty()) {
-            return System.currentTimeMillis() / 1000;
-        }
+    public long getEarliestTime(){
         return perSecondStats.get(0).getSecond();
     }
 }

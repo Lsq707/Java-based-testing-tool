@@ -10,8 +10,7 @@ import org.slf4j.LoggerFactory;
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
-    public static void main(String[] args) throws Exception {
-
+    public static void main(String[] args) {
 
         Env.shutdownHook();
 
@@ -31,7 +30,7 @@ public class Main {
             }
             if (cmd.hasOption("userCount")) {
                 String[] userCounts = cmd.getOptionValues("uc");
-                for(String uc:userCounts){
+                for (String uc : userCounts) {
                     envBuilder.setUserCount(uc);
                 }
             }
@@ -90,7 +89,7 @@ public class Main {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             logger.info("Thread was interrupted, Failed to complete operation");
-            logger.debug("Error in main: {}",e.getMessage(), e);
+            logger.debug("Error in main: {}", e.getMessage(), e);
             System.exit(1);
         } catch (ParseException e) {
             logger.info(e.getMessage());
@@ -98,18 +97,17 @@ public class Main {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("commandline", options);
             System.exit(1);
-        }catch (Exception e){
+        } catch (Exception e) {
             logger.info(e.getMessage());
             System.exit(1);
         }
-
     }
 
     private static Options getOptions() {
         Options options = new Options();
 
         options.addOption("h", "host", true, "Host name");
-        options.addOption("i", "Loop", true, "Indicates the number of iterations to run each user task");
+        options.addOption("i", "Loop", true, "Indicates the number of iterations to run each user task incompatible with shape control Only able to work -t -u for users control");
         options.addOption("d", "Duration", true, "Sets the duration of the testing period in seconds");
         options.addOption("r", "spawnRate", true, "Rate to spawn users at (users per second)");
         options.addOption("u", "user", true, "Select specific user class for testing");
@@ -119,10 +117,9 @@ public class Main {
         options.addOption("csv", "csvLocation", true, "Directory path for storing CSV files");
         options.addOption("html", "htmlLocation", true, "Directory path for storing HTML report files.");
         options.addOption("check_failRatio", "failRatioCheck", true, "Check fail Ratio per seconds");
-        options.addOption("check_avgResponseTime", "responseTimeCheck", true,"Check avg response time per seconds");
-        options.addOption("shape", "customizedShape", true,"Specify the customShape when there are more than 1 customized shape defined");
+        options.addOption("check_avgResponseTime", "responseTimeCheck", true, "Check avg response time per seconds");
+        options.addOption("shape", "customizedShape", true, "Specify the customShape when there are more than 1 customized shape defined");
 
         return options;
-
     }
 }

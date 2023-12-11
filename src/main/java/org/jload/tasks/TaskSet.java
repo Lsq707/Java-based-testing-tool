@@ -21,7 +21,7 @@ public class TaskSet {
     private static final Logger logger = LoggerFactory.getLogger(Runner.class);
     private final List<Method> userTasks;
     private int sumWeight = 0;
-    private User user;
+    private final User user;
     private int loopTime;
 
     public TaskSet(User user, List<Method> userTasks) {
@@ -38,8 +38,8 @@ public class TaskSet {
         List<Method> toRemove = new ArrayList<>();
         for (Method task : userTasks) {
             Annotation[] annotations = task.getAnnotations();
-            for (Annotation myAnotation : annotations) {
-                if (myAnotation instanceof Task theTask) {
+            for (Annotation myAnnotation : annotations) {
+                if (myAnnotation instanceof Task theTask) {
                     if (Env.taskTag != null) {
                         //Filter
                         Set<String> tmpTag = new HashSet<>(Arrays.asList(theTask.tag().split("\\s+")));
@@ -123,6 +123,9 @@ public class TaskSet {
         user.getClient().closeClient();
     }
 
+    /*
+    Check the tags
+     */
     public static boolean hasOverlap(Set<String> set1, Set<String> set2) {
         Set<String> copyOfSet1 = new HashSet<>(set1);
         copyOfSet1.retainAll(set2);
