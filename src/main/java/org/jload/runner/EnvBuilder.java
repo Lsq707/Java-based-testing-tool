@@ -103,7 +103,7 @@ public class EnvBuilder {
     public Runner runnerBuild() throws IOException {
 
         if (userNum == -1 && Env.chosenUsers.isEmpty()) {  //If the total user count is unknown, use the count of user class instead.
-            userNum = Env.definedUsers.size();
+            userNum = Env.getUsers().size();
         } else if (userNum == -1) { // the count of user class chosen
             if (assignedUserCount(Env.chosenUsers)) { // the count of user class + assigned user count
                 userNum = getUseCount();

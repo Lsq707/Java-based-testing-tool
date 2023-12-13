@@ -1,25 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration>
+<Configuration shutdownHook="disable">
   <Properties>
     <Property name="log.pattern">%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n</Property>
+    <Property name="console.pattern">%d{yyyy-MM-dd HH:mm:ss} %logger{36} - %msg%n</Property>
+    <Property name="filename">logs/jload-${date:yyyy-MM-dd-HH-mm-ss}.log</Property>
   </Properties>
   <Appenders>
     <!-- to console -->
     <Console name="console" target="SYSTEM_OUT">
-      <PatternLayout pattern="${log.pattern}" />
+      <PatternLayout pattern="${console.pattern}"/>
     </Console>
     <!-- to file -->
-    <File name="logFile" fileName="logs/jload.log" append="false">
-      <PatternLayout pattern="${log.pattern}" />
-    </File>
-
+    <RollingFile name="logFile" fileName="${filename}" filePattern="${filename}.%i">
+      <PatternLayout>
+        <Pattern>${log.pattern}</Pattern>
+      </PatternLayout>
+      <Policies>
+        <SizeBasedTriggeringPolicy size="10MB"/>
+      </Policies>
+      <DefaultRolloverStrategy max="10"/>
+    </RollingFile>
   </Appenders>
   <Loggers>
     <Root level="debug">
       <!-- info level -->
-      <AppenderRef ref="console" level="info" />
+      <AppenderRef ref="console" level="info"/>
       <!-- debug level -->
-      <AppenderRef ref="logFile" level="debug" />
+      <AppenderRef ref="logFile" level="debug"/>
     </Root>
   </Loggers>
 </Configuration>

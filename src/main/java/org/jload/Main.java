@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
 
         Env.shutdownHook();
 
@@ -90,11 +90,16 @@ public class Main {
             Thread.currentThread().interrupt();
             logger.info("Thread was interrupted, Failed to complete operation");
             logger.debug("Error in main: {}", e.getMessage(), e);
+            System.exit(1);
         } catch (ParseException e) {
             logger.info(e.getMessage());
             // Automatically generate the help statement
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("commandline", options);
+            System.exit(1);
+        } catch (Exception e) {
+            logger.info(e.getMessage());
+            System.exit(1);
         }
     }
 
@@ -102,7 +107,7 @@ public class Main {
         Options options = new Options();
 
         options.addOption("h", "host", true, "Host name");
-        options.addOption("i", "Loop", true, "Indicates the number of iterations to run each user task");
+        options.addOption("i", "Loop", true, "Indicates the number of iterations to run each user task incompatible with shape control Only able to work -t -u for users control");
         options.addOption("d", "Duration", true, "Sets the duration of the testing period in seconds");
         options.addOption("r", "spawnRate", true, "Rate to spawn users at (users per second)");
         options.addOption("u", "user", true, "Select specific user class for testing");

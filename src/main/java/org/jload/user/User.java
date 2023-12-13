@@ -2,6 +2,7 @@ package org.jload.user;
 
 import org.jload.client.UserClient;
 import org.jload.exceptions.TaskException;
+import org.jload.runner.Runner;
 import org.jload.tasks.TaskSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,13 +44,11 @@ public class User implements Runnable {
 
     public UserClient getClient() {
         userClient.setHost(getUserParamHost());
-        //System.out.println("User1: " + userClient.getHost());
         return userClient;
     }
 
     public UserClient getClient(String host) {
         userClient.setHost(host);
-        //System.out.println("User2: " + userClient.getHost());
         return userClient;
     }
 
@@ -95,6 +94,8 @@ public class User implements Runnable {
         threadInfo = Thread.currentThread().toString();
         //Runner.runUsers(this);
         try {
+            //Mark the fist start
+            Runner.getIsFirstRequestSent().compareAndSet(false, true);
             taskSet.startTesting();
         } catch (InterruptedException | TaskException e) {
             logger.error("User {} got error {}", this.getClass().getName(), e.getMessage(), e);
@@ -106,7 +107,6 @@ public class User implements Runnable {
     private void setTaskSet() {
         Method[] declaredMethods = this.getClass().getDeclaredMethods();
         List<Method> userTasks = new ArrayList<>(List.of(declaredMethods));
-
         taskSet = new TaskSet(this, userTasks);
     }
 

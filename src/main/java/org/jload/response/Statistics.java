@@ -46,7 +46,6 @@ public class Statistics {
             filter.process(responseStat);
         }
     }
-
   */
 }
 

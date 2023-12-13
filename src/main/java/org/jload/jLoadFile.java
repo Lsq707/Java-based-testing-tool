@@ -16,36 +16,20 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 @UserParam(
-        host = "http://0.0.0.0:5000",
         waitTime = "constant(0)"
 )
 class MyUser extends User {
 
-    @Task(tag = "V1")
-    void getMethod() {
-        getClient("http://0.0.0.0:5000").path("/First").get();
-    }
-
-    @Task(tag = "V1")
-    void getMethod2() {
-        getClient().path("/First").get();
-    }
-
-    /*
-    @Task(tag = "V2")
-    void testTag() {
-        System.out.println("V2");
-    }
-
-
-    /*
     @Task
-    void postMethod() {
-        String payload = "{\"key1\":\"value1\", \"key2\":\"value2\"}";
-        getClient().path("/First").post(Entity.json(payload));
+    void getMethod() {
+        getClient("http://0.0.0.0:5000").path("/v1", "http://0.0.0.0:5000").get();
     }
 
-     */
+    @Task
+    void getMethod2() {
+        getClient("http://0.0.0.0:5000").path("/v2", "http://0.0.0.0:5000").get();
+    }
+
 }
 
 @UserParam(
@@ -66,9 +50,6 @@ class MyUser2 extends User {
         System.out.println("VariableTest: " + Env.getVariable("test"));
     }
 }
-
-
-
 /*
 
 class CustomShape extends LoadTestShape {
@@ -86,7 +67,6 @@ class CustomShape extends LoadTestShape {
 
 }
 
-
 class CustomShape2 extends LoadTestShape {
 
     @Override
@@ -100,8 +80,3 @@ class CustomShape2 extends LoadTestShape {
 }
 
  */
-
-
-
-
-

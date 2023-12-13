@@ -21,7 +21,7 @@ public class TaskSet {
     private static final Logger logger = LoggerFactory.getLogger(Runner.class);
     private final List<Method> userTasks;
     private int sumWeight = 0;
-    private User user;
+    private final User user;
     private int loopTime;
 
     public TaskSet(User user, List<Method> userTasks) {
@@ -38,8 +38,8 @@ public class TaskSet {
         List<Method> toRemove = new ArrayList<>();
         for (Method task : userTasks) {
             Annotation[] annotations = task.getAnnotations();
-            for (Annotation myAnotation : annotations) {
-                if (myAnotation instanceof Task theTask) {
+            for (Annotation myAnnotation : annotations) {
+                if (myAnnotation instanceof Task theTask) {
                     if (Env.taskTag != null) {
                         //Filter
                         Set<String> tmpTag = new HashSet<>(Arrays.asList(theTask.tag().split("\\s+")));
@@ -111,18 +111,21 @@ public class TaskSet {
                 task.invoke(user);
             } catch (Exception e) {
                 logger.debug("Error in user- {} : task- {} : error: {}", user.getClass().getName(), task.getName(), e.getMessage(), e);
-                throw new TaskException("Error when executing the " + user.getClass().getName() + "-" + task.getName());
+                throw new TaskException("Error when executing the " + user.getClass().getName() + "-" + task.getName() + "Please check if the server open");
             }
             Thread.sleep(waitTime.getWaitTime());
             //If defined loop times the tasks will only do once and then dispose the user
             loopTime += 1;
-            if (Runner.loop != 0 && loopTime > Runner.loop) {
+            if (Runner.getLoop() != 0 && loopTime > Runner.getLoop()) {
                 Runner.disposeUser(user);
             }
         }
         user.getClient().closeClient();
     }
-
+    
+    /*
+    Check the tags
+     */
     public static boolean hasOverlap(Set<String> set1, Set<String> set2) {
         Set<String> copyOfSet1 = new HashSet<>(set1);
         copyOfSet1.retainAll(set2);

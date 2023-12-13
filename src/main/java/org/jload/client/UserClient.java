@@ -4,11 +4,13 @@ import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 
 import jakarta.ws.rs.client.Invocation;
+import jakarta.ws.rs.client.WebTarget;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.ConcurrentHashMap;
 
 /*
 This class meant to create client based on the Jersey Client for each user
@@ -19,6 +21,8 @@ public class UserClient {
     //Assign a thread to user
     //private final ExecutorService clientExecutor;
     private static String host;
+    //Save resources for URI compute
+    private static final ConcurrentHashMap<String, WebTarget> uriCache = new ConcurrentHashMap<>();
 
     public UserClient() {
         // Initialize client able to add config
@@ -45,21 +49,29 @@ public class UserClient {
     }
 
     public Invocation.Builder path(String path) {
-        long startTime = System.currentTimeMillis();
-        String timeStamp = getTimeStamp();
-        return client.target(host).path(path).request().property("startTime", startTime).property("timeStamp", timeStamp);
+        WebTarget webTarget = uriCache.computeIfAbsent(path, this::buildWebTarget);
+        return createRequestBuilder(webTarget);
     }
 
     public Invocation.Builder path() {
-        long startTime = System.currentTimeMillis();
-        String timeStamp = getTimeStamp();
-        return client.target(host).path("").request().property("startTime", startTime).property("timeStamp", timeStamp);
+        return path("");
     }
 
     public Invocation.Builder path(String path, String rewrittenPath) {
+        WebTarget webTarget = uriCache.computeIfAbsent(path, this::buildWebTarget);
+        Invocation.Builder builder = createRequestBuilder(webTarget);
+        return builder.property("rewritten", rewrittenPath);
+    }
+
+    private WebTarget buildWebTarget(String path) {
+        // When there has no cache
+        return client.target(host).path(path);
+    }
+
+    private Invocation.Builder createRequestBuilder(WebTarget webTarget) {
         long startTime = System.currentTimeMillis();
         String timeStamp = getTimeStamp();
-        return client.target(host).path(path).request().property("startTime", startTime).property("timeStamp", timeStamp).property("rewritten", rewrittenPath);
+        return webTarget.request().property("startTime", startTime).property("timeStamp", timeStamp);
     }
 
     private String getTimeStamp() {
