@@ -20,12 +20,12 @@ import java.util.List;
 )
 class MyUser extends User {
 
-    @Task(tag = "V1")
+    @Task
     void getMethod() {
         getClient("http://0.0.0.0:5000").path("/v1", "http://0.0.0.0:5000").get();
     }
 
-    @Task(tag = "V1")
+    @Task
     void getMethod2() {
         getClient("http://0.0.0.0:5000").path("/v2", "http://0.0.0.0:5000").get();
     }

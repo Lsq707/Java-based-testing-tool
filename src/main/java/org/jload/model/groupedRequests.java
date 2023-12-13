@@ -1,5 +1,7 @@
 package org.jload.model;
 
+import org.jload.runner.Env;
+
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -7,6 +9,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class groupedRequests {
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final String label;
     private long totalRequestNum;
     private long totalFailNum;
@@ -21,7 +24,7 @@ public class groupedRequests {
         perSecondStats = new CopyOnWriteArrayList<>();
     }
 
-    public void addRequestNumb() {
+    public void addRequestNum() {
         totalRequestNum++;
     }
 
@@ -40,7 +43,7 @@ public class groupedRequests {
     public void addSecondStat(ResponseStat responseStat) {
         long time = responseStat.elapsed();
         addRequestTime(time);
-        addRequestNumb();
+        addRequestNum();
         long currentSeconds = convertToSeconds(responseStat.timeStamp());
         PerSecondStat perSecondStat = getOrCreateStatWithLabel(currentSeconds);
         perSecondStat.addRequest();
@@ -65,8 +68,7 @@ public class groupedRequests {
     }
 
     private long convertToSeconds(String timeStamp) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        LocalDateTime localDateTime = LocalDateTime.parse(timeStamp, formatter);
+        LocalDateTime localDateTime = LocalDateTime.parse(timeStamp, FORMATTER);
         // Assuming the system's default time zone.
         return localDateTime.atZone(ZoneId.systemDefault()).toEpochSecond();
     }
