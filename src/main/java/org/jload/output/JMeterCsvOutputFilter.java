@@ -6,6 +6,9 @@ import org.jload.response.StatisticsFilter;
 public class JMeterCsvOutputFilter implements StatisticsFilter {
     @Override
     public void process(ResponseStat responseStat) {
+        if (responseStat.responseCode().equals("NA")) {
+            return;
+        }
         CsvOutput.addResponse(responseStat);
     }
 }

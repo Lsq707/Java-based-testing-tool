@@ -2,8 +2,10 @@ package org.jload.runner;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LoggerContext;
+import org.jload.model.ScreenOutputs;
 import org.jload.model.ShapeTuple;
 import org.jload.output.CheckRatioFilter;
+import org.jload.output.ScreenMetricsFilter;
 import org.jload.user.User;
 
 import org.slf4j.Logger;
@@ -52,6 +54,7 @@ public class Runner {
     });
 
      */
+
     private static Set<String> assignedThread;
     static final Object lock = new Object(); //For interrupt timing if the shape returns null
 
@@ -132,7 +135,7 @@ public class Runner {
         LoadTestShape loadTestShape = Env.initShape();
         runnableFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
-                logger.debug("Active Users: {}", printOutActiveUsr());
+                //logger.debug("Active Users: {}", printOutActiveUsr());
                 List<ShapeTuple> shapeTuples = loadTestShape.tick();
                 if (shapeTuples == null) {
                     logger.debug("shapeTuples returns null");
@@ -158,12 +161,16 @@ public class Runner {
     /*
     Active user count for each user class
     */
-    private List<String> printOutActiveUsr() {
-        List<String> info = new ArrayList<>();
+    public static void printOutActiveUsr() {
+        List<String> userInfo = new ArrayList<>();
+        int totalRunningUser = 0;
         for (Map.Entry<String, List<User>> entry : activeUsers.entrySet()) {
-            info.add(entry.getKey() + " currentRunning: " + String.valueOf(entry.getValue().size()));
+            int userNum = entry.getValue().size();
+            userInfo.add(entry.getKey() + " running: " + String.valueOf(userNum));
+            totalRunningUser += userNum;
         }
-        return info;
+        System.out.print("User running: " + totalRunningUser + " ");
+        System.out.println(userInfo);
     }
 
     /*
@@ -344,9 +351,14 @@ public class Runner {
         // Shutdown all user
         shutdownAllUsers();
 
-        CheckRatioFilter.getCheckingFuture().cancel(true);
-        shutdownThreads(CheckRatioFilter.getScheduledCheckService());
-        CheckRatioFilter.printAll();
+        ScreenMetricsFilter.printMetrics();
+
+        if (CheckRatioFilter.getCheckingFuture() != null) {
+            CheckRatioFilter.getCheckingFuture().cancel(true);
+            shutdownThreads(CheckRatioFilter.getScheduledCheckService());
+        }
+
+        ScreenMetricsFilter.shutdown();
 
         LoggerContext context = (LoggerContext) LogManager.getContext(false);
         context.close();
@@ -396,5 +408,9 @@ public class Runner {
 
     public static AtomicBoolean getIsFirstRequestSent() {
         return isFirstRequestSent;
+    }
+
+    public static boolean getTestFlag() {
+        return testFlag.get();
     }
 }

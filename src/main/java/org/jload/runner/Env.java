@@ -1,15 +1,12 @@
 package org.jload.runner;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.core.Appender;
-import org.apache.logging.log4j.core.LoggerContext;
-import org.apache.logging.log4j.core.appender.AbstractOutputStreamAppender;
 import org.jload.exceptions.ShapeException;
 import org.jload.model.ShapeTuple;
 import org.jload.output.CheckRatioFilter;
 import org.jload.output.CsvOutput;
 import org.jload.output.JMeterCsvOutputFilter;
 import org.jload.output.HtmlReport;
+import org.jload.output.ScreenMetricsFilter;
 import org.jload.response.Statistics;
 
 import org.jload.user.User;
@@ -20,7 +17,6 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.text.DecimalFormat;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -282,7 +278,9 @@ public class Env {
         htmlFilePath = builder.getHtmlFile();
 
         //Whether to add ratio check
-        Statistics.registerFilter(new CheckRatioFilter());
+        if (Env.checkFailRatio > 0 || Env.checkAvgResponseTime > 0) {
+            Statistics.registerFilter(new CheckRatioFilter());
+        }
 
         //Whether to gengerate Html
         if (htmlFilePath != null && builder.getCsvFileName() != null) {
@@ -290,6 +288,9 @@ public class Env {
             CsvOutput.createHtmlCsvFile(HtmlCsvPath);
             Statistics.registerFilter(new JMeterCsvOutputFilter());
         }
+
+        //Screen Metrics
+        Statistics.registerFilter(new ScreenMetricsFilter());
 
         Runner runner = builder.runnerBuild();
         //Start test

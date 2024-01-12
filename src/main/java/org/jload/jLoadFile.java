@@ -22,14 +22,15 @@ class MyUser extends User {
 
     @Task
     void getMethod() {
-        getClient("http://0.0.0.0:5000").path("/v1", "http://0.0.0.0:5000").get();
+        getClient("http://0.0.0.0:5000").path("/v1").get();
     }
 
+    /*
     @Task
     void getMethod2() {
-        getClient("http://0.0.0.0:5000").path("/v2", "http://0.0.0.0:5000").get();
+        getClient("http://0.0.0.0:6000").path("/v2", "http://0.0.0.0:6000").get();
     }
-
+     */
 }
 
 @UserParam(
@@ -77,6 +78,4 @@ class CustomShape2 extends LoadTestShape {
         return  null;
     }
 
-}
-
- */
+}*/

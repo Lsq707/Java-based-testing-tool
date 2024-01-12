@@ -1,6 +1,7 @@
 package org.jload.client;
 
 import jakarta.ws.rs.client.ClientRequestContext;
+import jakarta.ws.rs.client.ClientRequestFilter;
 import jakarta.ws.rs.client.ClientResponseContext;
 import jakarta.ws.rs.client.ClientResponseFilter;
 import org.jload.model.ResponseStat;
@@ -16,14 +17,40 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
 /*
 Client filter to compute the return type
 */
-public class ResponseTimeFilter implements ClientResponseFilter {
+public class ResponseTimeFilter implements ClientResponseFilter, ClientRequestFilter {
     private static final Logger logger = LoggerFactory.getLogger(ResponseTimeFilter.class);
+    public static ThreadLocal<String> url = new ThreadLocal<>();
+    public static ThreadLocal<String> method = new ThreadLocal<>();
+    public static ThreadLocal<Long> startTime = new ThreadLocal<>();
+    public static ThreadLocal<Long> bytesSent = new ThreadLocal<>();
+    public static ThreadLocal<String> timeStamp = new ThreadLocal<>();
+    public static ThreadLocal<String> host = new ThreadLocal<>();
+    public static ThreadLocal<String> label = new ThreadLocal<>();
+    public static ThreadLocal<String> dataType = new ThreadLocal<>();
+    public static ThreadLocal<String> rewrittenPath = new ThreadLocal<>();
+
+    @Override
+    public void filter(ClientRequestContext requestContext) {
+        timeStamp.set((String) requestContext.getProperty("timeStamp"));
+        startTime.set(System.currentTimeMillis());
+        ByteProcess byteProcess = new ByteProcess();
+        bytesSent.set(byteProcess.getByteCount());
+        rewrittenPath.set(null);
+        if (requestContext.getProperty("rewritten") != null) {
+            rewrittenPath.set((String) requestContext.getProperty("rewritten"));
+        }
+        host.set(requestContext.getUri().toString());
+        dataType.set(requestContext.getHeaderString("Content-Type"));
+        label.set((rewrittenPath.get() == null ? host.get() : rewrittenPath.get()) + " " + requestContext.getMethod());
+        url.set(requestContext.getUri().toString());
+        method.set(requestContext.getMethod());
+        ResponseStat responseStat = new ResponseStat(timeStamp.get(), 0, label.get(), "NA", "NA", "NA", "NA", false, "NA", 0, 0, host.get(), rewrittenPath.get());
+        Statistics.addStatistic(responseStat);
+        //ScreenMetrics.addRequest(requestContext);
+    }
 
     @Override
     public void filter(ClientRequestContext requestContext, ClientResponseContext responseContext) {
@@ -60,7 +87,9 @@ public class ResponseTimeFilter implements ClientResponseFilter {
         String workerName = threadInfo.split("@")[1];
         //String workerName = "test";
         Runner.addPlatformThread(workerName);
-        Statistics.addStatistic(new ResponseStat(timeStamp, responseTime, label, String.valueOf(responseCode), statusInfo, responseMsg, dataType, success, failureMsg, bytesSent, bytesReceived, host, rewrittenPath));
+        ResponseStat responseStat = new ResponseStat(timeStamp, responseTime, label, String.valueOf(responseCode), statusInfo, responseMsg, dataType, success, failureMsg, bytesSent, bytesReceived, host, rewrittenPath);
+        //ScreenMetrics.addResponse(responseStat);
+        Statistics.addStatistic(responseStat);
     }
 
     private long calculateResponseTime(long startTime, long endTime) {
