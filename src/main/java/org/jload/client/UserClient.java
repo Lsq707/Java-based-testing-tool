@@ -5,6 +5,11 @@ import jakarta.ws.rs.client.ClientBuilder;
 
 import jakarta.ws.rs.client.Invocation;
 import jakarta.ws.rs.client.WebTarget;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.jnh.connector.JavaNetHttpConnectorProvider;
+import org.glassfish.jersey.apache5.connector.Apache5ConnectorProvider;
+import org.glassfish.jersey.apache5.connector.Apache5ClientProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,27 +23,24 @@ This class meant to create client based on the Jersey Client for each user
 public class UserClient {
     private static final Logger logger = LoggerFactory.getLogger(UserClient.class);
     private final Client client;
-    //Assign a thread to user
-    //private final ExecutorService clientExecutor;
     private static String host;
     //Save resources for URI compute
     private static final ConcurrentHashMap<String, WebTarget> uriCache = new ConcurrentHashMap<>();
 
     public UserClient() {
         // Initialize client able to add config
-        this.client = ClientBuilder.newBuilder().build();
+        ClientConfig clientConfig = new ClientConfig().connectorProvider(new JavaNetHttpConnectorProvider());
+        /*
+        final PoolingHttpClientConnectionManager poolConnectionManager = new PoolingHttpClientConnectionManager();
+        poolConnectionManager.setMaxTotal(10000);
+        poolConnectionManager.setDefaultMaxPerRoute(5000);
+        ClientConfig clientConfig = new ClientConfig();
+        clientConfig.property(Apache5ClientProperties.CONNECTION_MANAGER, poolConnectionManager);
+        clientConfig.connectorProvider(new Apache5ConnectorProvider());
+         */
+        this.client = ClientBuilder.newBuilder().withConfig(clientConfig).build();
         this.client.register(ResponseTimeFilter.class);
-        //clientExecutor = Executors.newVirtualThreadPerTaskExecutor();
     }
-
-    /*
-    Get the Executor for each user to execute their tasks
-     */
-    /*
-    public ExecutorService getClientExecutor() {
-        return this.clientExecutor;
-    }
-     */
 
     public Client getClient() {
         return client;

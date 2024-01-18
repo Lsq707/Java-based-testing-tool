@@ -4,6 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.jload.model.ShapeTuple;
 import org.jload.output.CheckRatioFilter;
+import org.jload.output.ScreenMetricsFilter;
 import org.jload.user.User;
 
 import org.slf4j.Logger;
@@ -32,10 +33,10 @@ public class Runner {
     private static int spawnRate;
     private static int userNum;
     private static Set<Class<?>> definedUsers;
-    private static ConcurrentHashMap<String, List<User>> activeUsers;
     private static ScheduledExecutorService scheduledExecutorService;
     private static ScheduledFuture<?> runnableFuture;
     private static int loop;
+    private static final ConcurrentHashMap<String, List<User>> activeUsers = new ConcurrentHashMap<>();
     private static final AtomicBoolean testFlag = new AtomicBoolean(true);
     private static final ExecutorService userExecutor = Executors.newVirtualThreadPerTaskExecutor();
     private static final AtomicBoolean isFirstRequestSent = new AtomicBoolean(false);
@@ -52,6 +53,7 @@ public class Runner {
     });
 
      */
+
     private static Set<String> assignedThread;
     static final Object lock = new Object(); //For interrupt timing if the shape returns null
 
@@ -63,7 +65,6 @@ public class Runner {
         Runner.spawnRate = spawnRate;
         Runner.userNum = userNum;
         timeOut = Integer.MAX_VALUE;
-        activeUsers = new ConcurrentHashMap<>();
         assignedThread = ConcurrentHashMap.newKeySet();
     }
 
@@ -132,7 +133,7 @@ public class Runner {
         LoadTestShape loadTestShape = Env.initShape();
         runnableFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
-                logger.debug("Active Users: {}", printOutActiveUsr());
+                //logger.debug("Active Users: {}", printOutActiveUsr());
                 List<ShapeTuple> shapeTuples = loadTestShape.tick();
                 if (shapeTuples == null) {
                     logger.debug("shapeTuples returns null");
@@ -158,12 +159,16 @@ public class Runner {
     /*
     Active user count for each user class
     */
-    private List<String> printOutActiveUsr() {
-        List<String> info = new ArrayList<>();
+    public static void printOutActiveUsr() {
+        List<String> userInfo = new ArrayList<>();
+        int totalRunningUser = 0;
         for (Map.Entry<String, List<User>> entry : activeUsers.entrySet()) {
-            info.add(entry.getKey() + " currentRunning: " + String.valueOf(entry.getValue().size()));
+            int userNum = entry.getValue().size();
+            userInfo.add(entry.getKey() + " running: " + String.valueOf(userNum));
+            totalRunningUser += userNum;
         }
-        return info;
+        System.out.print("User running: " + totalRunningUser + " ");
+        System.out.println(userInfo);
     }
 
     /*
@@ -344,9 +349,15 @@ public class Runner {
         // Shutdown all user
         shutdownAllUsers();
 
-        CheckRatioFilter.getCheckingFuture().cancel(true);
-        shutdownThreads(CheckRatioFilter.getScheduledCheckService());
-        CheckRatioFilter.printAll();
+        if (CheckRatioFilter.getCheckingFuture() != null) {
+            CheckRatioFilter.getCheckingFuture().cancel(true);
+            shutdownThreads(CheckRatioFilter.getScheduledCheckService());
+        }
+
+        if (ScreenMetricsFilter.getScheduledExecutor() != null) {
+            shutdownThreads(ScreenMetricsFilter.getScheduledExecutor());
+            ScreenMetricsFilter.printMetrics();
+        }
 
         LoggerContext context = (LoggerContext) LogManager.getContext(false);
         context.close();
@@ -396,5 +407,9 @@ public class Runner {
 
     public static AtomicBoolean getIsFirstRequestSent() {
         return isFirstRequestSent;
+    }
+
+    public static boolean getTestFlag() {
+        return testFlag.get();
     }
 }

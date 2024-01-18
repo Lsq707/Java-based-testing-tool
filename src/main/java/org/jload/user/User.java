@@ -90,7 +90,7 @@ public class User implements Runnable {
     @Override
     public void run() {
         //Assign virtual threads to each tasks in the user
-        logger.debug("User Running: {}", this.getClass().getName());
+        //logger.debug("User Running: {}", this.getClass().getName());
         threadInfo = Thread.currentThread().toString();
         //Runner.runUsers(this);
         try {
@@ -100,6 +100,8 @@ public class User implements Runnable {
         } catch (InterruptedException | TaskException e) {
             logger.error("User {} got error {}", this.getClass().getName(), e.getMessage(), e);
             throw new RuntimeException(e);
+        } finally {
+            getClient().closeClient();
         }
         logger.debug("User Ended: {}", this.getClass().getName());
     }

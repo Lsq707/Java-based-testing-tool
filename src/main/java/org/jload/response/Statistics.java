@@ -39,14 +39,6 @@ public class Statistics {
             logger.error("Error in Statistic {}", e.getMessage(), e);
         }
     }
-
-  /*
-    private static void applyFilters(ResponseStat responseStat) {
-        for (StatisticsFilter filter : filters) {
-            filter.process(responseStat);
-        }
-    }
-  */
 }
 
 

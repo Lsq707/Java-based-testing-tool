@@ -28,5 +28,7 @@
       <!-- debug level -->
       <AppenderRef ref="logFile" level="debug"/>
     </Root>
+       <!--For connector to run properly-->
+    <Logger name="org.apache" level="ERROR"/>
   </Loggers>
 </Configuration>

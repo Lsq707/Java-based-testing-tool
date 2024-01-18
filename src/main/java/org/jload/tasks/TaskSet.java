@@ -1,6 +1,11 @@
 package org.jload.tasks;
 
+import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.WebApplicationException;
+import org.jload.client.ResponseTimeFilter;
 import org.jload.exceptions.TaskException;
+import org.jload.model.ResponseStat;
+import org.jload.response.Statistics;
 import org.jload.runner.Env;
 import org.jload.runner.Runner;
 import org.jload.user.User;
@@ -9,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -109,9 +115,16 @@ public class TaskSet {
             }
             try {
                 task.invoke(user);
+            } catch (InvocationTargetException ite) {
+                //System.out.println(ite.getMessage() + ite);
+                Throwable cause = ite.getCause();  // get the connection errors
+                if (cause instanceof ProcessingException || cause instanceof WebApplicationException) {
+                    trackFailInfo(cause);
+                }
+                logger.debug("Error in user- {} : task- {} : error: {}", user.getClass().getName(), task.getName(), ite.getMessage(), ite);
             } catch (Exception e) {
                 logger.debug("Error in user- {} : task- {} : error: {}", user.getClass().getName(), task.getName(), e.getMessage(), e);
-                throw new TaskException("Error when executing the " + user.getClass().getName() + "-" + task.getName() + "Please check if the server open");
+                throw new TaskException("Error when executing the " + user.getClass().getName() + "-" + task.getName());
             }
             Thread.sleep(waitTime.getWaitTime());
             //If defined loop times the tasks will only do once and then dispose the user
@@ -120,9 +133,22 @@ public class TaskSet {
                 Runner.disposeUser(user);
             }
         }
-        user.getClient().closeClient();
     }
-    
+
+    private void trackFailInfo(Throwable cause) {
+        long endTime = System.currentTimeMillis();
+        String timeStamp = ResponseTimeFilter.timeStamp.get();
+        long responseTime = endTime - ResponseTimeFilter.startTime.get();
+        String label = ResponseTimeFilter.label.get();
+        String host = ResponseTimeFilter.host.get();
+        String rewrittenPath = ResponseTimeFilter.rewrittenPath.get();
+        String dataType = ResponseTimeFilter.dataType.get();
+        //logger.info("Request failed - URL: {}, Method: {}, Error: {}", url, method, cause.getMessage());
+        ResponseStat responseStat = new ResponseStat(timeStamp, responseTime, label, cause.getMessage(), "NA", cause.getMessage(), dataType, false, cause.getMessage(), 0, 0, host, rewrittenPath);
+        Statistics.addStatistic(responseStat);
+        //ScreenMetrics.addResponse(responseStat);
+    }
+
     /*
     Check the tags
      */
