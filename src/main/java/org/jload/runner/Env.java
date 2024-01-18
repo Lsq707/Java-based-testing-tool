@@ -124,7 +124,7 @@ public class Env {
     }
 
     public static LoadTestShape defaultShape() throws ShapeException {
-        logger.info("Using defaultShape");
+        logger.debug("Using defaultShape");
         int testingTime = Runner.getDuration();
         int computeUserCount = Runner.getUserNum();
         int spawnRate = Runner.getSpawnRate();

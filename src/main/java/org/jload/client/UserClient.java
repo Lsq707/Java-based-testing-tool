@@ -29,7 +29,7 @@ public class UserClient {
 
     public UserClient() {
         // Initialize client able to add config
-        ClientConfig clientConfig = new ClientConfig().connectorProvider(new JavaNetHttpConnectorProvider()); //will create error after 8000
+        ClientConfig clientConfig = new ClientConfig().connectorProvider(new JavaNetHttpConnectorProvider());
         /*
         final PoolingHttpClientConnectionManager poolConnectionManager = new PoolingHttpClientConnectionManager();
         poolConnectionManager.setMaxTotal(10000);

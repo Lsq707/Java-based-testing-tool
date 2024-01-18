@@ -2,7 +2,6 @@ package org.jload.runner;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LoggerContext;
-import org.jload.model.ScreenOutputs;
 import org.jload.model.ShapeTuple;
 import org.jload.output.CheckRatioFilter;
 import org.jload.output.ScreenMetricsFilter;
@@ -34,10 +33,10 @@ public class Runner {
     private static int spawnRate;
     private static int userNum;
     private static Set<Class<?>> definedUsers;
-    private static ConcurrentHashMap<String, List<User>> activeUsers;
     private static ScheduledExecutorService scheduledExecutorService;
     private static ScheduledFuture<?> runnableFuture;
     private static int loop;
+    private static final ConcurrentHashMap<String, List<User>> activeUsers = new ConcurrentHashMap<>();
     private static final AtomicBoolean testFlag = new AtomicBoolean(true);
     private static final ExecutorService userExecutor = Executors.newVirtualThreadPerTaskExecutor();
     private static final AtomicBoolean isFirstRequestSent = new AtomicBoolean(false);
@@ -66,7 +65,6 @@ public class Runner {
         Runner.spawnRate = spawnRate;
         Runner.userNum = userNum;
         timeOut = Integer.MAX_VALUE;
-        activeUsers = new ConcurrentHashMap<>();
         assignedThread = ConcurrentHashMap.newKeySet();
     }
 
@@ -351,14 +349,15 @@ public class Runner {
         // Shutdown all user
         shutdownAllUsers();
 
-        ScreenMetricsFilter.printMetrics();
-
         if (CheckRatioFilter.getCheckingFuture() != null) {
             CheckRatioFilter.getCheckingFuture().cancel(true);
             shutdownThreads(CheckRatioFilter.getScheduledCheckService());
         }
 
-        ScreenMetricsFilter.shutdown();
+        if (ScreenMetricsFilter.getScheduledExecutor() != null) {
+            shutdownThreads(ScreenMetricsFilter.getScheduledExecutor());
+            ScreenMetricsFilter.printMetrics();
+        }
 
         LoggerContext context = (LoggerContext) LogManager.getContext(false);
         context.close();

@@ -21,7 +21,6 @@ public class CheckRatioFilter implements StatisticsFilter {
     private static final Logger logger = LoggerFactory.getLogger(CheckRatioFilter.class);
     private static ScheduledExecutorService scheduledCheckService;
     private static ScheduledFuture<?> checkingFuture;
-    //For the total data perSeconds to be printed on screen
 
     public CheckRatioFilter() {
         checkMetrics();
@@ -37,6 +36,9 @@ public class CheckRatioFilter implements StatisticsFilter {
             try {
                 List<ScreenOutputs> screenOutputs = ScreenMetricsFilter.getScreenOutputs();
                 if (Env.checkFailRatio > 0 || Env.checkAvgResponseTime > 0) {
+                    if (screenOutputs.isEmpty()) {
+                        logger.debug("screenOutputs is empty.");
+                    }
                     for (ScreenOutputs data : screenOutputs) {
                         if (data.getFailRatio() > Env.checkFailRatio) {
                             throw new RatioException("Test Failed due to failure ratio > " + Env.checkFailRatio);

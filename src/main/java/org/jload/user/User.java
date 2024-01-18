@@ -100,6 +100,8 @@ public class User implements Runnable {
         } catch (InterruptedException | TaskException e) {
             logger.error("User {} got error {}", this.getClass().getName(), e.getMessage(), e);
             throw new RuntimeException(e);
+        } finally {
+            getClient().closeClient();
         }
         logger.debug("User Ended: {}", this.getClass().getName());
     }

@@ -21,6 +21,9 @@ import java.io.InputStreamReader;
 Client filter to compute the return type
 */
 public class ResponseTimeFilter implements ClientResponseFilter, ClientRequestFilter {
+    /*
+    To store and get the error requests
+     */
     private static final Logger logger = LoggerFactory.getLogger(ResponseTimeFilter.class);
     public static ThreadLocal<String> url = new ThreadLocal<>();
     public static ThreadLocal<String> method = new ThreadLocal<>();

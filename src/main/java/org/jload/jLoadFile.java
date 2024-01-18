@@ -22,15 +22,13 @@ class MyUser extends User {
 
     @Task
     void getMethod() {
-        getClient("http://0.0.0.0:5000").path("/v1").get();
+        getClient("http://0.0.0.0:5000").path("/v1", "http://0.0.0.0:5000").get();
     }
 
-    /*
     @Task
     void getMethod2() {
-        getClient("http://0.0.0.0:6000").path("/v2", "http://0.0.0.0:6000").get();
+        getClient("http://0.0.0.0:5000").path("/v2", "http://0.0.0.0:5000").get();
     }
-     */
 }
 
 @UserParam(
@@ -51,7 +49,6 @@ class MyUser2 extends User {
         System.out.println("VariableTest: " + Env.getVariable("test"));
     }
 }
-/*
 
 class CustomShape extends LoadTestShape {
 
@@ -65,9 +62,8 @@ class CustomShape extends LoadTestShape {
         }
         return null;
     }
-
 }
-
+/*
 class CustomShape2 extends LoadTestShape {
 
     @Override
